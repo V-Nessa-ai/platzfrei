@@ -33,16 +33,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final response = await supabase.auth.signUp(
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
-        data: {'display_name': _nameCtrl.text.trim()},
       );
       if (mounted) {
-        if (response.session != null) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SplashScreen()),
-          );
+        if (response.user != null) {
+          // Namen im Profil speichern
+          try {
+            await supabase.from('profiles').upsert({
+              'id': response.user!.id,
+              'display_name': _nameCtrl.text.trim(),
+            });
+          } catch (_) {}
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const SplashScreen()),
+            );
+          }
         } else {
-          setState(() => _error =
-              'Bitte bestätige deine E-Mail und melde dich dann an.');
+          setState(() => _error = 'Bitte bestätige deine E-Mail und melde dich dann an.');
           setState(() => _loading = false);
         }
       }
