@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 
-late final SupabaseClient supabase;
+SupabaseClient get supabase => Supabase.instance.client;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,10 +21,10 @@ Future<void> main() async {
   }
 
   try {
-    supabase = SupabaseClient(
-      supabaseUrl,
-      supabaseAnonKey,
-      authOptions: const AuthClientOptions(
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+      authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.implicit,
       ),
     );
@@ -44,10 +44,7 @@ class PlatzfreiApp extends StatelessWidget {
     return MaterialApp(
       title: 'Platzfrei',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: Colors.green,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(colorSchemeSeed: Colors.green, useMaterial3: true),
       home: supabase.auth.currentUser != null
           ? const SplashScreen()
           : const LoginScreen(),
