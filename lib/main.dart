@@ -21,7 +21,13 @@ Future<void> main() async {
   }
 
   try {
-    supabase = SupabaseClient(supabaseUrl, supabaseAnonKey);
+    supabase = SupabaseClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      authOptions: const AuthClientOptions(
+        authFlowType: AuthFlowType.implicit,
+      ),
+    );
   } catch (e) {
     runApp(_ErrorApp('Supabase Fehler: $e'));
     return;
