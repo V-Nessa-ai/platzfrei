@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 
-SupabaseClient get supabase => Supabase.instance.client;
+late final SupabaseClient supabase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,12 +15,7 @@ Future<void> main() async {
     return;
   }
 
-  try {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
-  } catch (e) {
-    runApp(_ErrorApp('Supabase Fehler: $e'));
-    return;
-  }
+  supabase = SupabaseClient(supabaseUrl, supabaseAnonKey);
 
   runApp(const ProviderScope(child: PlatzfreiApp()));
 }
