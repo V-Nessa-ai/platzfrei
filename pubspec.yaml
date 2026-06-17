@@ -9,23 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # Supabase
-  supabase_flutter: ^2.5.0
-
-  # State management
-  flutter_riverpod: ^2.5.1
-
-  # Navigation
-  go_router: ^14.2.0
-
-  # UI
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^4.0.0
 
 flutter:
