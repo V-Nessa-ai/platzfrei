@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'web_storage.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 
-SupabaseClient get supabase => Supabase.instance.client;
+late final SupabaseClient supabase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,18 +21,14 @@ Future<void> main() async {
     return;
   }
 
-  try {
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.implicit,
-      ),
-    );
-  } catch (e) {
-    runApp(_ErrorApp('Supabase Fehler: $e'));
-    return;
-  }
+  supabase = SupabaseClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    authOptions: AuthClientOptions(
+      pkceAsyncStorage: WebLocalStorage(),
+      authFlowType: AuthFlowType.pkce,
+    ),
+  );
 
   runApp(const ProviderScope(child: PlatzfreiApp()));
 }
