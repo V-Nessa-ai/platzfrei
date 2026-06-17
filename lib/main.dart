@@ -7,9 +7,15 @@ import 'src/core/router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  assert(supabaseUrl.isNotEmpty, 'SUPABASE_URL is not set');
+  assert(supabaseAnonKey.isNotEmpty, 'SUPABASE_ANON_KEY is not set');
+
   await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL'),
-    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   runApp(const ProviderScope(child: PlatzfreiApp()));
