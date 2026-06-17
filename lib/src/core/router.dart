@@ -1,16 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../features/auth/auth_provider.dart';
 import '../features/auth/login_screen.dart';
 import '../features/bookings/bookings_screen.dart';
 
-part 'router.g.dart';
-
-@riverpod
-GoRouter router(Ref ref) {
+final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
@@ -33,4 +28,4 @@ GoRouter router(Ref ref) {
       ),
     ],
   );
-}
+});

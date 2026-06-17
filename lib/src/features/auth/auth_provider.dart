@@ -1,16 +1,12 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/supabase_client.dart';
 
-part 'auth_provider.g.dart';
-
-@riverpod
-Stream<AuthState> authState(Ref ref) {
+final authStateProvider = StreamProvider<AuthState>((ref) {
   return supabase.auth.onAuthStateChange;
-}
+});
 
-@riverpod
-User? currentUser(Ref ref) {
+final currentUserProvider = Provider<User?>((ref) {
   return ref.watch(authStateProvider).valueOrNull?.session?.user;
-}
+});
