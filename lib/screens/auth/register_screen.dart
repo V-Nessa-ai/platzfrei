@@ -30,15 +30,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     setState(() { _loading = true; _error = null; });
     try {
-      await supabase.auth.signUp(
+      final response = await supabase.auth.signUp(
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
         data: {'display_name': _nameCtrl.text.trim()},
       );
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const SplashScreen()),
-        );
+        if (response.session != null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const SplashScreen()),
+          );
+        } else {
+          setState(() => _error =
+              'Bitte bestätige deine E-Mail und melde dich dann an.');
+          setState(() => _loading = false);
+        }
       }
     } catch (e) {
       setState(() => _error = 'Registrierung fehlgeschlagen: $e');
