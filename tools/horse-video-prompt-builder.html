@@ -409,6 +409,12 @@
         </div>
 
         <div class="spec">
+          <p class="eyebrow">Wind</p>
+          <div class="spec-val chips-inline" id="wind-chips"></div>
+          <p class="spec-note">Gilt für das ganze Video und lässt sich mit jedem Wetter kombinieren – beschreibt, was an Mähne, Schweif und Vegetation zu sehen sein soll.</p>
+        </div>
+
+        <div class="spec">
           <p class="eyebrow">Zusatz</p>
           <div class="spec-val" style="align-items:stretch">
             <label class="sr" for="extra">Eigener Zusatz zum Hauptprompt</label>
@@ -507,8 +513,17 @@
     {id:"bedeckt",de:"Bedeckt",text:"Bedeckt"},
     {id:"neblig",de:"Neblig",text:"Neblig"},
     {id:"regen",de:"Regnerisch",text:"Regnerisch"},
-    {id:"schnee",de:"Schnee",text:"Schneefall"},
-    {id:"wind",de:"Windig",text:"Windig"}
+    {id:"schnee",de:"Schnee",text:"Schneefall"}
+  ];
+
+  /* Wind läuft als eigene Achse mit: er lässt sich mit jedem Wetter
+     kombinieren und beschreibt, was im Bild sichtbar sein soll. */
+  var WIND = [
+    {id:"none",   de:"ohne Angabe", text:""},
+    {id:"calm",   de:"windstill",   text:"Vollkommene Windstille im ganzen Video: Mähne und Schweif des Pferds hängen ruhig, kein Grashalm und kein Blatt bewegt sich. " + BT + "no wind, still air" + BT},
+    {id:"breeze", de:"leichte Brise", text:"Eine leichte Brise weht durch die ganze Szene: Mähne und Schweif bewegen sich sanft, Gras und Blätter wiegen leicht. " + BT + "light breeze" + BT},
+    {id:"steady", de:"frischer Wind", text:"Frischer Wind weht durch die ganze Szene: Mähne und Schweif wehen sichtbar, Gras und Zweige bewegen sich deutlich. " + BT + "steady wind" + BT},
+    {id:"strong", de:"kräftiger Wind", text:"Kräftiger, böiger Wind weht durch die ganze Szene: Mähne und Schweif wehen stark, das Gras legt sich in Böen, Staub und Blätter werden verweht. " + BT + "strong wind, gusts" + BT}
   ];
 
   function ambientPrompt(){
@@ -659,6 +674,7 @@
       time:"mittags",
       season:"herbst",
       weather:"neblig",
+      wind:"none",
       extra:"",
       view:"full",
       panels:{tech:false, base:false},
@@ -681,6 +697,8 @@
       if(d.audio === "off") d.audio = "silent";
       if(d.audio === "on") d.audio = "full";
       if(d.res === "480p") d.res = "720p";
+      if(d.weather === "wind"){ d.weather = "none"; if(!d.wind || d.wind === "none") d.wind = "steady"; }
+      if(!d.wind) d.wind = "none";
       if(typeof d.refHorse === "string") d.refHorses = [d.refHorse];
       if(typeof d.refEnv === "string") d.refEnvs = [d.refEnv];
       delete d.refHorse; delete d.refEnv;
@@ -754,10 +772,12 @@
     var t = find(TIMES, state.time).text;
     var se = find(SEASONS, state.season).text;
     var w = find(WEATHER, state.weather).text;
+    var wind = find(WIND, state.wind).text;
     var env = [];
     if(t) env.push("Tageszeit: " + t + ".");
     if(se) env.push("Jahreszeit: " + se + ".");
     if(w) env.push("Wetter: " + w + ".");
+    if(wind) env.push(wind);
     if(env.length){
       env.push(state.blocks.environment
         ? "Genau wie angegeben in der Referenzumgebung, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter als vorgegeben."
@@ -1049,6 +1069,7 @@
     chipGroup(el("time-chips"), "time", TIMES, state.time, function(v){ state.time = v; render(); save(); });
     chipGroup(el("season-chips"), "season", SEASONS, state.season, function(v){ state.season = v; render(); save(); });
     chipGroup(el("weather-chips"), "weather", WEATHER, state.weather, function(v){ state.weather = v; render(); save(); });
+    chipGroup(el("wind-chips"), "wind", WIND, state.wind, function(v){ state.wind = v; render(); save(); });
   }
 
   function iconBtn(glyph, label, disabled, onClick){
@@ -1460,7 +1481,7 @@
     if(state.blocks.gear) bits.push("ohne Ausrüstung");
     if(state.blocks.environment) bits.push("Umgebung");
     if((state.detail || "").trim()) bits.push("Besonderheit");
-    [find(HOOVES, state.hoof), find(TIMES, state.time), find(SEASONS, state.season), find(WEATHER, state.weather)]
+    [find(HOOVES, state.hoof), find(TIMES, state.time), find(SEASONS, state.season), find(WEATHER, state.weather), find(WIND, state.wind)]
       .forEach(function(o){ if(o.text) bits.push(o.de); });
     return bits.length ? bits.join("  \u00b7  ") : "keine Bausteine aktiv";
   }
@@ -1514,7 +1535,7 @@
     state.mode = "omni_reference"; state.res = "720p"; state.aspect = "16:9";
     state.bitrate = "standard";
     state.blocks = {identity:true, gear:true, environment:true};
-    state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig";
+    state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig"; state.wind = "none";
     buildTech(); buildBase(); syncRate(); renderScenes(); render(); save();
     toast("Testlauf geladen: 10 Szenen, 80 Sekunden");
   });
