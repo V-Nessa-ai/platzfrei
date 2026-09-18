@@ -293,6 +293,7 @@
       <div><b id="stat-scenes">0</b>Szenen</div>
       <div><b id="stat-secs">0 s</b>Gesamtlänge</div>
       <div class="credits"><b id="stat-credits">–</b>Credits ca.</div>
+      <div class="credits"><b id="stat-money">–</b>Kosten ca.</div>
     </div>
   </header>
 
@@ -372,6 +373,15 @@
             <span class="spec-note" style="grid-column:auto;margin:0">für <b id="rate-res">720p</b></span>
           </div>
           <p class="spec-note">Aus deinem Preflight-Check: 6,5 Credits pro Sekunde bei 720p. Für 1080p den dortigen Wert eintragen – er wird pro Auflösung gemerkt.</p>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Preis / Credit</p>
+          <div class="spec-val">
+            <input class="inp inp-num" type="number" id="price" min="0" step="0.001" placeholder="?">
+            <span class="spec-note" style="grid-column:auto;margin:0">Euro pro Credit</span>
+          </div>
+          <p class="spec-note">Was dich ein Credit tatsächlich kostet – Paketpreis geteilt durch die enthaltenen Credits. Daraus rechnet der Baukasten die Kosten oben rechts und im Briefing.</p>
         </div>
       </section>
 
@@ -684,6 +694,7 @@
       refHorses:[""],
       refEnvs:[""],
       rates:{"720p":6.5, "1080p":null},
+      pricePerCredit:null,
       blocks:{identity:true, gear:true, environment:true},
       hoof:"bare",
       detail:"",
@@ -882,11 +893,28 @@
     var r = state.rates[state.res];
     return (typeof r === "number" && r > 0) ? r : null;
   }
-  function creditText(){
+  function credits(){
     var r = rate();
-    if(!r) return null;
-    var total = Math.round(totalSeconds() * r);
-    return "ca. " + total.toLocaleString("de-DE") + " Credits";
+    return r ? Math.round(totalSeconds() * r) : null;
+  }
+
+  function money(){
+    var c = credits();
+    var p = Number(state.pricePerCredit);
+    return (c !== null && p > 0) ? c * p : null;
+  }
+
+  function moneyText(){
+    var m = money();
+    return (m === null) ? null : m.toLocaleString("de-DE", {style:"currency", currency:"EUR"});
+  }
+
+  function creditText(){
+    var c = credits();
+    if(c === null) return null;
+    var out = "ca. " + c.toLocaleString("de-DE") + " Credits";
+    var m = moneyText();
+    return m ? out + " · ca. " + m : out;
   }
 
   function audioFlag(){ return state.audio === "silent" ? "false" : "true"; }
@@ -1398,8 +1426,9 @@
     el("base-preview").textContent = basePrompt() || "Keine Bausteine aktiv – der Hauptprompt-Block bleibt leer.";
     el("stat-scenes").textContent = state.scenes.length;
     el("stat-secs").textContent = totalSeconds() + " s";
-    var r = rate();
-    el("stat-credits").textContent = r ? Math.round(totalSeconds() * r).toLocaleString("de-DE") : "–";
+    var c = credits();
+    el("stat-credits").textContent = (c === null) ? "–" : c.toLocaleString("de-DE");
+    el("stat-money").textContent = moneyText() || "–";
     refreshPanels();
   }
 
@@ -1510,6 +1539,13 @@
 
   el("extra").value = state.extra;
   el("extra").addEventListener("input", function(e){ state.extra = e.target.value; render(); save(); });
+
+  el("price").value = (state.pricePerCredit > 0) ? state.pricePerCredit : "";
+  el("price").addEventListener("input", function(e){
+    var v = Number(e.target.value);
+    state.pricePerCredit = (v > 0) ? v : null;
+    render(); save();
+  });
 
   el("rate").addEventListener("input", function(e){
     var v = Number(e.target.value);
