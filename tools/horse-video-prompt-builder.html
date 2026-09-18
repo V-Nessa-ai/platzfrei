@@ -155,6 +155,9 @@
   .chips-inline .chip .box{padding:5px 11px;border-radius:999px}
   .chips-inline .chip .de{font-size:12.5px}
   .chips-inline .chip .en{display:none}
+  .chips-ar .chip .box{display:flex;align-items:center;gap:8px}
+  .ar-icon{display:block;flex:0 0 auto;border:1.5px solid currentColor;border-radius:2px;opacity:.85}
+  .chip:has(input:checked) .box{color:var(--accent-ink)}
 
   /* ---------- Einklappen ---------- */
   .scene.is-collapsed .scene-body,
@@ -340,7 +343,7 @@
 
         <div class="spec">
           <p class="eyebrow">Seitenverhältnis</p>
-          <div class="spec-val chips-inline" id="ar-chips"></div>
+          <div class="spec-val chips-inline chips-ar" id="ar-chips"></div>
         </div>
 
         <div class="spec">
@@ -1047,6 +1050,16 @@
   var el = function(id){ return document.getElementById(id); };
   var scenesEl = el("scenes"), outEl = el("out"), toastEl = el("toast");
 
+  /* Kantenlängen der Formvorschau: längste Seite immer 20 px */
+  function aspectDims(id){
+    if(id === "auto") return [17, 17];
+    var parts = String(id).split(":");
+    var w = Number(parts[0]), h = Number(parts[1]);
+    if(!(w > 0) || !(h > 0)) return [17, 17];
+    var scale = 20 / Math.max(w, h);
+    return [Math.max(6, Math.round(w * scale)), Math.max(6, Math.round(h * scale))];
+  }
+
   function chipGroup(host, name, options, current, onPick, opts){
     opts = opts || {};
     host.textContent = "";
@@ -1063,6 +1076,16 @@
 
       var box = document.createElement("span");
       box.className = "box";
+
+      if(opts.aspect){
+        var icon = document.createElement("span");
+        icon.className = "ar-icon";
+        var dims = aspectDims(opt.id);
+        icon.style.width = dims[0] + "px";
+        icon.style.height = dims[1] + "px";
+        if(opt.id === "auto") icon.style.borderStyle = "dashed";
+        box.appendChild(icon);
+      }
 
       var de = document.createElement("span");
       de.className = "de";
@@ -1091,7 +1114,7 @@
 
   function buildTech(){
     chipGroup(el("res-chips"), "res", RESOLUTIONS, state.res, function(v){ state.res = v; syncRate(); render(); save(); });
-    chipGroup(el("ar-chips"), "ar", ASPECTS, state.aspect, function(v){ state.aspect = v; render(); save(); });
+    chipGroup(el("ar-chips"), "ar", ASPECTS, state.aspect, function(v){ state.aspect = v; render(); save(); }, {aspect:true});
     chipGroup(el("audio-chips"), "audio", AUDIO, state.audio, function(v){ state.audio = v; buildTech(); render(); save(); });
     chipGroup(el("bitrate-chips"), "bitrate", BITRATES, state.bitrate, function(v){ state.bitrate = v; render(); save(); });
 
