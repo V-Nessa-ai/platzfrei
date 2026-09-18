@@ -703,7 +703,18 @@
     {id:"zoomOut", de:"Zoom Out", en:"Zoom zurück", tag:"zoom out", moving:true, why:"Die Kamera zieht sich allmählich zurück und zeigt mehr von der Szene. Erzeugt Distanz, Spannung oder Einsamkeit.", url:"https://higgsfield.ai/de/motion/f9e6792f-b385-4eca-87f6-f439e917a7aa"}
   ];
 
-  var DURATIONS = [5,8,10,15];
+  var DURATIONS = [5, 8, 10, 12, 15, 20];
+  var DURATION_OPTIONS = DURATIONS.map(function(d){
+    return {id:String(d), de:d + " Sekunden"};
+  });
+
+  /* Gespeicherte Werte auf die nächstgelegene Länge ziehen */
+  function nearestDuration(value){
+    var n = Number(value) || DURATIONS[0];
+    return DURATIONS.reduce(function(best, d){
+      return Math.abs(d - n) < Math.abs(best - n) ? d : best;
+    }, DURATIONS[0]);
+  }
 
   /* ===================== Zustand ===================== */
 
@@ -805,6 +816,7 @@
         var MOVED = {craneUp:"jibUp", orbit:"orbit360", track:"dollyLeft", pan:"panLeft"};
         if(MOVED[s.move]) s.move = MOVED[s.move];
         s.noHorse = !!s.noHorse;
+        s.dur = nearestDuration(s.dur);
         if(typeof s.framingText !== "string") s.framingText = "";
       });
       return d;
@@ -1371,30 +1383,12 @@
     var cols = document.createElement("div");
     cols.className = "cols";
 
-    /* L\u00e4nge als freies Feld: Seedance nimmt 4 bis 30 Sekunden */
-    var durWrap = document.createElement("div");
-    durWrap.className = "fld";
-    var durLab = document.createElement("label");
-    durLab.setAttribute("for", "dur-" + s.id);
-    durLab.textContent = "L\u00e4nge (s)";
-    var dur = document.createElement("input");
-    dur.type = "number";
-    dur.className = "inp";
-    dur.id = "dur-" + s.id;
-    dur.min = 4; dur.max = 30; dur.step = 1;
-    dur.value = s.dur;
-    dur.addEventListener("input", function(){
-      s.dur = Math.max(4, Math.min(30, Number(dur.value) || 4));
+    var durField = selectField("L\u00e4nge (s)", DURATION_OPTIONS, String(s.dur), function(v){
+      s.dur = Number(v);
       refreshCard(s, card); render(); save();
     });
-    var durHint = document.createElement("p");
-    durHint.className = "why-hint";
-    durHint.textContent = "4 bis 30 Sekunden";
-    durWrap.appendChild(durLab);
-    durWrap.appendChild(dur);
-    durWrap.appendChild(durHint);
-    durWrap.classList.add("fld-dur");
-    cols.appendChild(durWrap);
+    durField.classList.add("fld-dur");
+    cols.appendChild(durField);
 
     /* Auswahlfeld, das bei "custom" ein Textfeld für eigene Angaben aufklappt */
     function customField(key, textKey, label, options, placeholder, idPrefix){
