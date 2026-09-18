@@ -253,9 +253,17 @@
   .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
   .btn-primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
   .btn-sm{padding:6px 11px;font-size:12px}
-  .btn-ghost{border-style:dashed;color:var(--muted);flex:1 1 200px;padding:13px}
-  .btn-ghost:hover{border-style:solid;color:var(--accent)}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .actions{display:grid;grid-template-columns:7fr 2fr 1fr;gap:10px;align-items:stretch}
+  .actions.no-scenes{grid-template-columns:7fr 3fr}
+  @media (max-width:640px){
+    .actions,.actions.no-scenes{grid-template-columns:1fr}
+  }
+  .actions .btn{
+    padding:15px 10px;font-size:12.5px;white-space:normal;line-height:1.25;text-align:center;
+  }
+  .actions .btn-add{font-size:16px;font-weight:700;padding:19px 14px;letter-spacing:.01em}
+  .btn-quiet{color:var(--muted)}
+  .btn-quiet:hover{color:var(--alert);border-color:var(--alert)}
 
   /* ---------- Ausgabe ---------- */
   .output{position:relative}
@@ -447,10 +455,10 @@
 
       <div id="scenes" class="editor"></div>
 
-      <div class="row">
-        <button class="btn btn-ghost" id="add-scene" type="button">+ Szene hinzufügen</button>
-        <button class="btn btn-ghost" id="toggle-all" type="button">Alle einklappen</button>
-        <button class="btn btn-ghost" id="reset" type="button">Alles leeren</button>
+      <div class="actions" id="actions">
+        <button class="btn btn-primary btn-add" id="add-scene" type="button">+ Szene hinzufügen</button>
+        <button class="btn" id="toggle-all" type="button">Alle einklappen</button>
+        <button class="btn btn-quiet" id="reset" type="button">Alles leeren</button>
       </div>
     </div>
 
@@ -1584,6 +1592,7 @@
   }
   function syncToggleAll(){
     el("toggle-all").hidden = !state.scenes.length;
+    el("actions").classList.toggle("no-scenes", !state.scenes.length);
     el("toggle-all").textContent = allCollapsed() ? "Alle ausklappen" : "Alle einklappen";
   }
   el("toggle-all").addEventListener("click", function(){
