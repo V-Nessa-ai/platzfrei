@@ -85,8 +85,12 @@
     display:flex;align-items:center;gap:9px;flex:1 1 auto;min-width:0;
     background:none;border:none;padding:0;text-align:left;
   }
-  button.panel-toggle .caret{color:var(--accent);font-size:10px}
-  button.panel-toggle:hover .eyebrow{color:var(--accent)}
+  button.panel-toggle .caret{font-size:10px}
+  button.panel-toggle:hover .eyebrow,
+  button.panel-toggle:hover .caret{opacity:.7}
+  /* Eigene Farbe je Panel-Überschrift, damit die Bereiche auseinanderzuhalten sind */
+  #panel-tech .panel-head .eyebrow,#panel-tech .panel-head .caret{color:#3DE1A1}
+  #panel-base .panel-head .eyebrow,#panel-base .panel-head .caret{color:#E1DB3D}
   button.panel-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
   .panel.is-collapsed > *:not(.panel-head){display:none}
   .panel.is-collapsed .panel-head{border-bottom:none}
