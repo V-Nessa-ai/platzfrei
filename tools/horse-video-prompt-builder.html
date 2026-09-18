@@ -268,6 +268,12 @@
   /* ---------- Ausgabe ---------- */
   .output{position:relative}
   @media (min-width:1080px){ .output{position:sticky;top:calc(env(safe-area-inset-top,0px) + 18px)} }
+  .switch{
+    display:flex;align-items:flex-start;gap:9px;padding:11px 16px;
+    border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted);cursor:pointer;
+  }
+  .switch input{margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+  .switch:hover{color:var(--ink)}
   .tabs{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap}
   .tab{position:relative}
   .tab input{position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;margin:0;cursor:pointer}
@@ -472,6 +478,10 @@
         <label class="tab"><input type="radio" name="view" id="view-scenes" value="scenes"><span>Nur Prompts</span></label>
         <label class="tab"><input type="radio" name="view" id="view-order" value="order"><span>Chat-Auftrag</span></label>
       </div>
+      <label class="switch" for="translate" id="translate-row">
+        <input type="checkbox" id="translate">
+        <span>Claude übersetzt die Prompts ins Englische, bevor sie an Higgsfield gehen – die Anweisung dazu steht im Auftrag.</span>
+      </label>
       <pre class="out" id="out" aria-live="polite"></pre>
       <div class="out-foot">
         <button class="btn btn-primary" id="copy-all" type="button">Ansicht kopieren</button>
@@ -696,6 +706,7 @@
       wind:"none",
       extra:"",
       view:"full",
+      translate:true,
       panels:{tech:false, base:false},
       emptyStart:true,
       scenes:[]
@@ -1000,6 +1011,17 @@
     var credits = creditText();
     out.push("");
     out.push("Umfang: " + state.scenes.length + " Szenen, " + totalSeconds() + " Sekunden gesamt" + (credits ? ", " + credits : "") + ".");
+
+    if(state.translate){
+      out.push("");
+      out.push("Sprache – bitte genau so:");
+      out.push("Übersetze jeden Szenen-Prompt vollständig ins Englische, bevor du ihn an Higgsfield schickst.");
+      out.push("- Wörtlich und vollständig übersetzen: nichts kürzen, nichts zusammenfassen, nichts ergänzen, Reihenfolge beibehalten.");
+      out.push("- Verneinungen bleiben Verneinungen: aus „kein Halfter“ wird „no halter“, nicht etwa weggelassen.");
+      out.push("- Pferdefachbegriffe korrekt übersetzen: Blesse = blaze, Socken = socks, Wirbel = whorl, Kruppe = croup, Widerrist = withers, Hinterhand = hindquarters, unbeschlagen = barefoot / unshod, Zaumzeug = bridle, Trense = snaffle bridle, Halfter = halter, Satteldecke = saddle pad.");
+      out.push("- Was in Backticks steht, ist bereits Englisch und bleibt unverändert stehen.");
+      out.push("- Nenn mir zu jeder Szene die englische Fassung, die du tatsächlich abgeschickt hast.");
+    }
     out.push("");
     out.push(state.scenes.length
       ? "Szenen – der Prompttext steht jeweils komplett hier, bitte unverändert übernehmen:"
@@ -1413,6 +1435,7 @@
 
   function render(){
     var text = currentView();
+    el("translate-row").hidden = (state.view !== "order");
     outEl.textContent = text;
     el("charcount").textContent = text.length.toLocaleString("de-DE") + " Zeichen";
     el("base-preview").textContent = basePrompt() || "Keine Bausteine aktiv – der Hauptprompt-Block bleibt leer.";
@@ -1542,6 +1565,12 @@
   el("rate").addEventListener("input", function(e){
     var v = Number(e.target.value);
     state.rates[state.res] = (v > 0) ? v : null;
+    render(); save();
+  });
+
+  el("translate").checked = !!state.translate;
+  el("translate").addEventListener("change", function(e){
+    state.translate = e.target.checked;
     render(); save();
   });
 
