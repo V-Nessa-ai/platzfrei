@@ -174,6 +174,10 @@
   }
 
   /* ---------- Szenen ---------- */
+  .empty{
+    margin:0;padding:26px 20px;border:1px dashed var(--line-strong);border-radius:var(--radius);
+    text-align:center;color:var(--muted);font-size:13.5px;line-height:1.5;
+  }
   .scene{background:var(--scene);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
   .scene-head{
     display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:9px 10px 9px 0;
@@ -658,7 +662,7 @@
       extra:"",
       view:"full",
       panels:{tech:false, base:false},
-      scenes:testRun()
+      scenes:[]
     };
   }
 
@@ -669,7 +673,7 @@
       var raw = localStorage.getItem(STORE_KEY);
       if(!raw) return null;
       var d = JSON.parse(raw);
-      if(!d || !Array.isArray(d.scenes) || !d.scenes.length) return null;
+      if(!d || !Array.isArray(d.scenes)) return null;
       var base = fresh();
       Object.keys(base).forEach(function(k){ if(typeof d[k] === "undefined") d[k] = base[k]; });
       if(!d.rates) d.rates = base.rates;
@@ -878,6 +882,7 @@
     state.scenes.forEach(function(s, i){
       out.push("", sceneHeading(s, i), RULE, scenePrompt(s));
     });
+    if(!state.scenes.length) out.push("", "Noch keine Szene angelegt.");
     var risky = state.scenes.filter(riskOf).length;
     if(risky){
       out.push("", "⚠ " + risky + " Szene(n) kombinieren bewegte Kamera mit schneller Gangart — im Testlauf die fehleranfälligste Kombination.");
@@ -886,6 +891,7 @@
   }
 
   function viewScenes(){
+    if(!state.scenes.length) return "Noch keine Szene angelegt.";
     return state.scenes.map(function(s, i){
       return sceneHeading(s, i) + "\n" + RULE + "\n" + scenePrompt(s);
     }).join("\n\n");
@@ -920,7 +926,9 @@
     out.push("");
     out.push("Umfang: " + state.scenes.length + " Szenen, " + totalSeconds() + " Sekunden gesamt" + (credits ? ", " + credits : "") + ".");
     out.push("");
-    out.push("Szenen – der Prompttext steht jeweils komplett hier, bitte unverändert übernehmen:");
+    out.push(state.scenes.length
+      ? "Szenen – der Prompttext steht jeweils komplett hier, bitte unverändert übernehmen:"
+      : "Szenen: noch keine angelegt.");
     state.scenes.forEach(function(s, i){
       out.push("");
       out.push((i+1) + ") duration: " + s.dur + " s — " + (s.title.trim() || "Ohne Titel"));
@@ -1147,7 +1155,7 @@
     actions.appendChild(iconBtn("\u2191", "Szene nach oben", index === 0, function(){ move(index,-1); }));
     actions.appendChild(iconBtn("\u2193", "Szene nach unten", index === state.scenes.length-1, function(){ move(index,1); }));
     actions.appendChild(iconBtn("\u29c9", "Szene duplizieren", false, function(){ duplicate(index); }));
-    actions.appendChild(iconBtn("\u2715", "Szene l\u00f6schen", state.scenes.length === 1, function(){ remove(index); }));
+    actions.appendChild(iconBtn("\u2715", "Szene l\u00f6schen", false, function(){ remove(index); }));
     head.appendChild(actions);
 
     var summary = document.createElement("p");
@@ -1284,6 +1292,13 @@
 
   function renderScenes(){
     scenesEl.textContent = "";
+    if(!state.scenes.length){
+      var empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "Noch keine Szene angelegt. „+ Szene hinzufügen“ legt die erste an – oder lade den Testlauf mit zehn fertigen Szenen.";
+      scenesEl.appendChild(empty);
+      return;
+    }
     state.scenes.forEach(function(s, i){ scenesEl.appendChild(buildScene(s, i)); });
   }
 
@@ -1320,9 +1335,8 @@
     renderScenes(); render(); save();
   }
   function remove(index){
-    if(state.scenes.length === 1) return;
     state.scenes.splice(index,1);
-    renderScenes(); render(); save();
+    renderScenes(); render(); syncToggleAll(); save();
   }
 
   function toast(message){
@@ -1466,6 +1480,7 @@
     return state.scenes.length > 0 && state.scenes.every(function(s){ return s.collapsed; });
   }
   function syncToggleAll(){
+    el("toggle-all").hidden = !state.scenes.length;
     el("toggle-all").textContent = allCollapsed() ? "Alle ausklappen" : "Alle einklappen";
   }
   el("toggle-all").addEventListener("click", function(){
@@ -1496,9 +1511,9 @@
   });
 
   el("reset").addEventListener("click", function(){
-    state.scenes = [scene({})];
+    state.scenes = [];
     state.extra = ""; el("extra").value = "";
-    renderScenes(); render(); save();
+    renderScenes(); render(); syncToggleAll(); save();
     toast("Szenen geleert");
   });
 
