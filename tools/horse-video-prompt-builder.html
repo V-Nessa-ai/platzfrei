@@ -390,12 +390,12 @@
         </div>
 
         <div class="spec">
-          <p class="eyebrow">Preis / Credit</p>
+          <p class="eyebrow">Credits / Euro</p>
           <div class="spec-val">
-            <input class="inp inp-num" type="number" id="price" min="0" step="0.001" placeholder="?">
-            <span class="spec-note" style="grid-column:auto;margin:0">Euro pro Credit</span>
+            <input class="inp inp-num" type="number" id="price" min="0" step="0.1" placeholder="?">
+            <span class="spec-note" style="grid-column:auto;margin:0">Credits für 1 Euro</span>
           </div>
-          <p class="spec-note">Was dich ein Credit tatsächlich kostet – Paketpreis geteilt durch die enthaltenen Credits. Daraus rechnet der Baukasten die Kosten oben rechts und im Briefing.</p>
+          <p class="spec-note">Was Higgsfield dir für einen Euro gibt – steht dort beim Kauf, z. B. 21 Credits. Daraus rechnet der Baukasten die Kosten oben rechts und im Briefing.</p>
         </div>
       </section>
 
@@ -696,7 +696,7 @@
       refHorses:[""],
       refEnvs:[""],
       rates:{"720p":6.5, "1080p":null},
-      pricePerCredit:null,
+      creditsPerEuro:null,
       blocks:{identity:true, gear:true, environment:true},
       hoof:"bare",
       detail:"",
@@ -729,6 +729,8 @@
       if(d.res === "480p") d.res = "720p";
       if(d.weather === "wind"){ d.weather = "none"; if(!d.wind || d.wind === "none") d.wind = "steady"; }
       if(!d.wind) d.wind = "none";
+      if(d.pricePerCredit > 0 && !d.creditsPerEuro) d.creditsPerEuro = 1 / d.pricePerCredit;
+      delete d.pricePerCredit;
       if(typeof d.refHorse === "string") d.refHorses = [d.refHorse];
       if(typeof d.refEnv === "string") d.refEnvs = [d.refEnv];
       delete d.refHorse; delete d.refEnv;
@@ -903,8 +905,8 @@
 
   function money(){
     var c = credits();
-    var p = Number(state.pricePerCredit);
-    return (c !== null && p > 0) ? c * p : null;
+    var perEuro = Number(state.creditsPerEuro);
+    return (c !== null && perEuro > 0) ? c / perEuro : null;
   }
 
   function moneyText(){
@@ -1555,10 +1557,10 @@
   el("extra").value = state.extra;
   el("extra").addEventListener("input", function(e){ state.extra = e.target.value; render(); save(); });
 
-  el("price").value = (state.pricePerCredit > 0) ? state.pricePerCredit : "";
+  el("price").value = (state.creditsPerEuro > 0) ? Math.round(state.creditsPerEuro * 100) / 100 : "";
   el("price").addEventListener("input", function(e){
     var v = Number(e.target.value);
-    state.pricePerCredit = (v > 0) ? v : null;
+    state.creditsPerEuro = (v > 0) ? v : null;
     render(); save();
   });
 
