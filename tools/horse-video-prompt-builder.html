@@ -450,7 +450,6 @@
       <div class="row">
         <button class="btn btn-ghost" id="add-scene" type="button">+ Szene hinzufügen</button>
         <button class="btn btn-ghost" id="toggle-all" type="button">Alle einklappen</button>
-        <button class="btn btn-ghost" id="load-test" type="button">Testlauf vom 18.09.2026 laden (10 Szenen)</button>
         <button class="btn btn-ghost" id="reset" type="button">Alles leeren</button>
       </div>
     </div>
@@ -666,21 +665,6 @@
       move:o.move || "static",
       collapsed:false
     };
-  }
-
-  function testRun(){
-    return [
-      scene({title:"Galopp von unten",      action:"gallop",   desc:"Kamerafahrt von unten nach oben entlang des galoppierenden Körpers.", dur:10, persp:"low",  shot:"none",  move:"craneUp"}),
-      scene({title:"Trab in der Seitenansicht", action:"proud", desc:"Seitenansicht.", dur:5, persp:"none", shot:"wide", move:"static"}),
-      scene({title:"Galopp von oben",       action:"gallop",   desc:"Luftperspektive, von oben sichtbar.", dur:10, persp:"bird", shot:"none", move:"none"}),
-      scene({title:"Mähne im Wind",         action:"mane",     desc:"Im Galopp, Nahaufnahme.", dur:5, persp:"none", shot:"close", move:"static"}),
-      scene({title:"Orbit um den Galopp",   action:"gallop",   desc:"Kamera orbitet langsam um das Motiv.", dur:10, persp:"none", shot:"wide", move:"orbit"}),
-      scene({title:"Hohe Knieaktion",       action:"trotHigh", desc:"Nahaufnahme der Vorderbeine.", dur:10, persp:"none", shot:"close", move:"static"}),
-      scene({title:"Licht auf dem Fell",    action:"coat",     desc:"Nahaufnahme des Fells.", dur:5, persp:"none", shot:"close", move:"static"}),
-      scene({title:"Grasende Lippen",       action:"lips",     desc:"Nahaufnahme der Lippen beim Grasen, Grashalme werden gerupft.", dur:10, persp:"none", shot:"close", move:"static"}),
-      scene({title:"Kopf am Bein",          action:"rub",      desc:"Nahaufnahme.", dur:5, persp:"none", shot:"close", move:"static"}),
-      scene({title:"Ruhe von oben",         action:"stand",    desc:"Vogelperspektive auf ein ruhig stehendes Pferd auf grüner Weide.", dur:10, persp:"bird", shot:"none", move:"orbit"})
-    ];
   }
 
   function fresh(){
@@ -1406,7 +1390,7 @@
     if(!state.scenes.length){
       var empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = "Noch keine Szene angelegt. „+ Szene hinzufügen“ legt die erste an – oder lade den Testlauf mit zehn fertigen Szenen.";
+      empty.textContent = "Noch keine Szene angelegt. „+ Szene hinzufügen“ legt die erste an.";
       scenesEl.appendChild(empty);
       return;
     }
@@ -1617,16 +1601,6 @@
       var field = last.querySelector(".scene-title");
       if(field) field.focus();
     }
-  });
-
-  el("load-test").addEventListener("click", function(){
-    state.scenes = testRun();
-    state.mode = "omni_reference"; state.res = "720p"; state.aspect = "16:9";
-    state.bitrate = "standard";
-    state.blocks = {identity:true, gear:true, environment:true};
-    state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig"; state.wind = "none";
-    buildTech(); buildBase(); syncRate(); renderScenes(); render(); save();
-    toast("Testlauf geladen: 10 Szenen, 80 Sekunden");
   });
 
   el("reset").addEventListener("click", function(){
