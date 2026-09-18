@@ -236,6 +236,12 @@
   select.sel:hover{border-color:var(--line-strong)}
   select.sel:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
   .why-hint{margin:0;font-size:11px;line-height:1.35;color:var(--muted);min-height:1.35em}
+  .move-link{
+    font-size:11px;color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;
+    align-self:flex-start;
+  }
+  .move-link:hover{border-bottom-color:var(--accent)}
+  .move-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
   .scene-foot{
     display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
@@ -648,17 +654,28 @@
     {id:"custom",   de:"eigener Ausschnitt …", en:"–",         tag:"",                text:""}
   ];
 
+  /* url zeigt auf die Higgsfield-Seite der Bewegung, sofern vorhanden –
+     dann erscheint unter dem Feld ein Link zu den Beispielvideos. */
   var MOVES = [
-    {id:"static",   de:"Statisch",     en:"static camera", tag:"static camera"},
-    {id:"none",     de:"ohne Angabe",  en:"–",             tag:""},
-    {id:"craneUp",  de:"Kran hoch",    en:"crane up",      tag:"crane up", moving:true},
-    {id:"craneDown",de:"Kran runter",  en:"crane down",    tag:"crane down", moving:true},
-    {id:"orbit",    de:"Orbit",        en:"orbit",         tag:"orbit", moving:true},
-    {id:"dollyIn",  de:"Fahrt heran",  en:"dolly in",      tag:"dolly in", moving:true},
-    {id:"dollyOut", de:"Fahrt zurück", en:"dolly out",     tag:"dolly out", moving:true},
-    {id:"track",    de:"Mitfahrt",     en:"tracking shot", tag:"tracking shot", moving:true},
-    {id:"pan",      de:"Schwenk",      en:"pan",           tag:"pan", moving:true},
-    {id:"handheld", de:"Handkamera",   en:"handheld",      tag:"handheld", moving:true}
+    {id:"static",   de:"Statisch",     en:"static camera", tag:"static camera",
+     why:"Kamera steht fest; im Bild bewegt sich nur das Motiv."},
+    {id:"none",     de:"ohne Angabe",  en:"–",             tag:"", why:""},
+    {id:"craneUp",  de:"Kran hoch",    en:"crane up",      tag:"crane up", moving:true,
+     why:"Kamera fährt senkrecht nach oben, der Blick öffnet sich zur Umgebung."},
+    {id:"craneDown",de:"Kran runter",  en:"crane down",    tag:"crane down", moving:true,
+     why:"Kamera senkt sich von oben auf das Motiv herab."},
+    {id:"orbit",    de:"Orbit",        en:"orbit",         tag:"orbit", moving:true,
+     why:"Kamera umkreist das Motiv in gleichbleibendem Abstand."},
+    {id:"dollyIn",  de:"Fahrt heran",  en:"dolly in",      tag:"dolly in", moving:true,
+     why:"Kamera fährt gerade auf das Motiv zu, der Ausschnitt wird enger."},
+    {id:"dollyOut", de:"Fahrt zurück", en:"dolly out",     tag:"dolly out", moving:true,
+     why:"Kamera fährt vom Motiv weg und gibt die Umgebung frei."},
+    {id:"track",    de:"Mitfahrt",     en:"tracking shot", tag:"tracking shot", moving:true,
+     why:"Kamera fährt seitlich mit dem Motiv mit, der Abstand bleibt gleich."},
+    {id:"pan",      de:"Schwenk",      en:"pan",           tag:"pan", moving:true,
+     why:"Kamera bleibt am Ort und schwenkt waagerecht über die Szene."},
+    {id:"handheld", de:"Handkamera",   en:"handheld",      tag:"handheld", moving:true,
+     why:"Leicht unruhige Führung aus der Hand, dokumentarische Anmutung."}
   ];
 
   var DURATIONS = [5,8,10,15];
@@ -1229,6 +1246,15 @@
     }
     var why = card.querySelector(".shot-hint");
     if(why) why.textContent = s.noHorse ? "" : (find(SHOTS, s.shot).why || "");
+
+    var mv = find(MOVES, s.move);
+    var moveWhy = card.querySelector(".move-hint");
+    if(moveWhy) moveWhy.textContent = mv.why || "";
+    var moveLink = card.querySelector(".move-link");
+    if(moveLink){
+      moveLink.hidden = !mv.url;
+      if(mv.url) moveLink.href = mv.url;
+    }
   }
 
   function buildScene(s, index){
@@ -1399,9 +1425,20 @@
       "z. B. nur die rechte Schulter mit dem Brandzeichen.", "frm");
     cols.appendChild(framingField);
 
-    cols.appendChild(selectField("Kamerabewegung", MOVES, s.move, function(v){
+    var moveField = selectField("Kamerabewegung", MOVES, s.move, function(v){
       s.move = v; refreshCard(s, card); render(); save();
-    }));
+    });
+    var moveWhy = document.createElement("p");
+    moveWhy.className = "why-hint move-hint";
+    moveField.appendChild(moveWhy);
+    var moveLink = document.createElement("a");
+    moveLink.className = "move-link";
+    moveLink.target = "_blank";
+    moveLink.rel = "noopener noreferrer";
+    moveLink.textContent = "Beispiele bei Higgsfield ansehen ↗";
+    moveLink.hidden = true;
+    moveField.appendChild(moveLink);
+    cols.appendChild(moveField);
 
     card.appendChild(cols);
 
