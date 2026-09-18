@@ -1,0 +1,1171 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pferdeszenen-Baukasten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EAEDEA;
+    --surface:#FFFFFF;
+    --surface-2:#F3F6F2;
+    --ink:#161B16;
+    --muted:#5C665B;
+    --line:#D4DBD2;
+    --line-strong:#B8C3B6;
+    --accent:#3C6340;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#DFEBDD;
+    --warm:#8E4E2A;
+    --warm-soft:#F4E3D8;
+    --alert:#9A3412;
+    --alert-soft:#FBE7DC;
+    --shadow:0 1px 2px rgba(22,27,22,.05), 0 10px 26px -18px rgba(22,27,22,.5);
+    --radius:10px;
+    --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F1310;
+      --surface:#171D18;
+      --surface-2:#1C231D;
+      --ink:#E6EBE5;
+      --muted:#96A295;
+      --line:#2B342B;
+      --line-strong:#3C483C;
+      --accent:#84B07C;
+      --accent-ink:#0A1A0C;
+      --accent-soft:#1B2E1C;
+      --warm:#D08A5C;
+      --warm-soft:#2E211A;
+      --alert:#EA9A6E;
+      --alert-soft:#331E14;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px -20px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1310;
+    --surface:#171D18;
+    --surface-2:#1C231D;
+    --ink:#E6EBE5;
+    --muted:#96A295;
+    --line:#2B342B;
+    --line-strong:#3C483C;
+    --accent:#84B07C;
+    --accent-ink:#0A1A0C;
+    --accent-soft:#1B2E1C;
+    --warm:#D08A5C;
+    --warm-soft:#2E211A;
+    --alert:#EA9A6E;
+    --alert-soft:#331E14;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px -20px rgba(0,0,0,.9);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  img{max-width:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1340px;margin:0 auto;padding-inline:16px;padding-block:26px 64px}
+  @media (min-width:760px){ .wrap{padding-inline:28px} }
+
+  /* ---------- Kopf ---------- */
+  .masthead{
+    display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+    gap:14px 24px;padding-bottom:16px;border-bottom:2px solid var(--ink);
+  }
+  .masthead h1{
+    font-family:var(--display);font-weight:700;font-size:clamp(25px,4vw,38px);
+    letter-spacing:-.02em;line-height:1.05;margin:0;text-wrap:balance;
+  }
+  .masthead p{margin:6px 0 0;color:var(--muted);max-width:58ch}
+  .stats{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .stats div{display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
+  .stats b{font-family:var(--display);font-size:19px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+  .stats .credits b{color:var(--warm)}
+
+  /* ---------- Board ---------- */
+  .board{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;margin-top:22px;align-items:start}
+  @media (min-width:1080px){ .board{grid-template-columns:minmax(0,1fr) 420px;gap:26px} }
+  .editor{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 16px;border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin:0;
+  }
+  .panel-head .eyebrow{color:var(--ink)}
+
+  /* ---------- Spezifikationszeilen ---------- */
+  .spec{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  @media (min-width:560px){ .spec{grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:baseline} }
+  .spec:last-child{border-bottom:none}
+  .spec > .eyebrow{padding-top:3px}
+  .spec-val{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+  .spec-note{
+    grid-column:1/-1;margin:2px 0 0;font-size:12px;color:var(--muted);
+  }
+  .spec-note.warn{
+    color:var(--alert);background:var(--alert-soft);border-radius:7px;padding:7px 10px;
+  }
+  .fixed-val{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .fixed-val small{color:var(--muted)}
+
+  input[type="text"],input[type="number"],textarea{
+    font-family:inherit;font-size:15px;color:var(--ink);background:transparent;border:none;padding:0;width:100%;
+  }
+  input:focus,textarea:focus{outline:none}
+  textarea{resize:vertical;line-height:1.55}
+  ::placeholder{color:var(--muted);opacity:.75}
+  input.inp,textarea.inp{
+    font-family:var(--mono);font-size:12.5px;padding:6px 9px;border:1px solid var(--line);
+    border-radius:7px;background:var(--surface-2);width:100%;
+  }
+  input.inp:focus,textarea.inp:focus{border-color:var(--accent);outline:2px solid var(--accent-soft)}
+  input.inp-num{width:88px;text-align:right}
+
+  /* ---------- Chips ---------- */
+  .chip{position:relative;display:block}
+  .chip input{position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;margin:0;cursor:pointer}
+  .chip .box{
+    display:block;padding:7px 10px;border:1px solid var(--line);border-radius:8px;
+    background:var(--surface);transition:background .12s ease,border-color .12s ease;
+  }
+  .chip:hover .box{border-color:var(--line-strong);background:var(--surface-2)}
+  .chip .de{display:block;font-size:13.5px;font-weight:500;line-height:1.25}
+  .chip .en{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+  .chip .why{display:block;font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35}
+  .chip:has(input:checked) .box{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 2px 0 0 var(--accent)}
+  .chip:has(input:checked) .en{color:var(--accent)}
+  .chip:has(input:focus-visible) .box{outline:2px solid var(--accent);outline-offset:2px}
+  .chips-inline{display:flex;flex-wrap:wrap;gap:6px}
+  .chips-inline .chip .box{padding:5px 11px;border-radius:999px}
+  .chips-inline .chip .de{font-size:12.5px}
+  .chips-inline .chip .en{display:none}
+
+  /* ---------- Hauptprompt ---------- */
+  .field{padding:13px 16px}
+  .field textarea{min-height:64px}
+  .preview{
+    margin:0;padding:13px 16px;border-top:1px solid var(--line);background:var(--surface-2);
+    font-family:var(--mono);font-size:11.5px;line-height:1.65;color:var(--muted);
+    white-space:pre-wrap;word-break:break-word;max-height:190px;overflow:auto;
+    border-radius:0 0 var(--radius) var(--radius);
+  }
+
+  /* ---------- Szenen ---------- */
+  .scene{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .scene-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 0;border-bottom:1px solid var(--line);background:var(--surface-2)}
+  .slate{
+    align-self:stretch;display:flex;align-items:center;padding:0 13px;background:var(--ink);color:var(--bg);
+    font-family:var(--mono);font-size:12px;letter-spacing:.08em;white-space:nowrap;
+  }
+  .scene-title{flex:1 1 170px;min-width:0;font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em}
+  .scene-actions{display:flex;gap:3px;flex:0 0 auto}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .icon-btn{
+    width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;
+    border-radius:7px;background:transparent;color:var(--muted);font-size:14px;line-height:1;
+  }
+  .icon-btn:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--line)}
+  .icon-btn:disabled{opacity:.3;cursor:not-allowed;background:transparent;color:var(--muted);border-color:transparent}
+  .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+  .scene-body{padding:13px 16px 2px}
+  .scene-body textarea{min-height:56px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(162px,1fr));gap:16px;padding:14px 16px}
+  .col{display:flex;flex-direction:column;gap:7px;min-width:0}
+  .col > .eyebrow{padding-bottom:5px;border-bottom:1px solid var(--line)}
+  .col-stack{display:flex;flex-direction:column;gap:6px}
+
+  .scene-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    padding:9px 16px;border-top:1px solid var(--line);background:var(--surface-2);
+  }
+  .tags{font-family:var(--mono);font-size:11.5px;color:var(--accent);word-break:break-word;min-width:0}
+  .flag{
+    display:flex;gap:8px;align-items:flex-start;margin:0;padding:9px 16px;
+    background:var(--alert-soft);color:var(--alert);font-size:12.5px;border-top:1px solid var(--line);
+  }
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 14px;border-radius:8px;
+    border:1px solid var(--line-strong);background:var(--surface);font-size:13px;font-weight:600;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn-primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
+  .btn-sm{padding:6px 11px;font-size:12px}
+  .btn-ghost{border-style:dashed;color:var(--muted);flex:1 1 200px;padding:13px}
+  .btn-ghost:hover{border-style:solid;color:var(--accent)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+
+  /* ---------- Ausgabe ---------- */
+  .output{position:relative}
+  @media (min-width:1080px){ .output{position:sticky;top:calc(env(safe-area-inset-top,0px) + 18px)} }
+  .tabs{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap}
+  .tab{position:relative}
+  .tab input{position:absolute;opacity:0;width:100%;height:100%;left:0;top:0;margin:0;cursor:pointer}
+  .tab span{display:block;padding:6px 11px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .tab:has(input:checked) span{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  .tab:has(input:focus-visible) span{outline:2px solid var(--accent);outline-offset:2px}
+  pre.out{
+    margin:0;padding:16px;max-height:min(56vh,640px);overflow:auto;font-family:var(--mono);
+    font-size:12px;line-height:1.62;white-space:pre-wrap;word-break:break-word;color:var(--ink);background:var(--surface-2);
+  }
+  .out-foot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap;border-radius:0 0 var(--radius) var(--radius)}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translate(-50%,14px);
+    padding:9px 18px;border-radius:999px;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;
+    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:20;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important;animation:none !important} }
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <h1>Pferdeszenen-Baukasten</h1>
+      <p>Szenen für Seedance 2.5 zusammenklicken – Referenzpferd, Umgebung, Kamera und Länge – und den fertigen Higgsfield-Aufruf mitsamt Prompts herausbekommen.</p>
+    </div>
+    <div class="stats">
+      <div><b id="stat-scenes">0</b>Szenen</div>
+      <div><b id="stat-secs">0 s</b>Gesamtlänge</div>
+      <div class="credits"><b id="stat-credits">–</b>Credits ca.</div>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="editor">
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="eyebrow">Technische Einstellungen · gelten für alle Szenen</h2>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Modell</p>
+          <div class="spec-val"><span class="fixed-val">seedance_2_5 <small>· Bytedance, 4–30 s</small></span></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Modus</p>
+          <div class="spec-val chips-inline" id="mode-chips"></div>
+          <p class="spec-note" id="mode-note"></p>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Auflösung</p>
+          <div class="spec-val chips-inline" id="res-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Seitenverhältnis</p>
+          <div class="spec-val chips-inline" id="ar-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Ton</p>
+          <div class="spec-val chips-inline" id="audio-chips"></div>
+          <p class="spec-note" id="audio-note"></p>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Bitrate</p>
+          <div class="spec-val chips-inline" id="bitrate-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Referenzbilder</p>
+          <div class="spec-val" style="flex-direction:column;align-items:stretch;gap:7px">
+            <label class="sr" for="ref-horse">media_id des Pferde-Referenzbilds</label>
+            <input class="inp" type="text" id="ref-horse" placeholder="media_id Pferd – z. B. 29eecd83-cd02-43c1-a60b-48afe9d701a4">
+            <label class="sr" for="ref-env">media_id des Umgebungs-Referenzbilds</label>
+            <input class="inp" type="text" id="ref-env" placeholder="media_id Umgebung – z. B. da0e6a49-12c2-43b6-840e-f4ef449fbba1">
+          </div>
+          <p class="spec-note">Beide mit Rolle <code>image_references</code>. media_ids sind an ihren Upload gebunden – in einem neuen Chat die Bilder erneut hochladen und die neuen IDs hier eintragen. Leer lassen ist in Ordnung, dann stehen Platzhalter im Aufruf.</p>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Credits / Sek.</p>
+          <div class="spec-val">
+            <input class="inp inp-num" type="number" id="rate" min="0" step="0.1" placeholder="?">
+            <span class="spec-note" style="grid-column:auto;margin:0">für <b id="rate-res">720p</b></span>
+          </div>
+          <p class="spec-note">Aus deinem Preflight-Check: 6,5 Credits pro Sekunde bei 720p. Für 480p und 1080p den jeweiligen Wert eintragen – er wird pro Auflösung gemerkt.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="eyebrow">Hauptprompt-Block · hängt an jeder Szene</h2>
+          <button class="btn btn-sm" id="copy-base" type="button">Block kopieren</button>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Bausteine</p>
+          <div class="spec-val chips-inline" id="block-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Hufe</p>
+          <div class="spec-val chips-inline" id="hoof-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Tageszeit</p>
+          <div class="spec-val chips-inline" id="time-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Jahreszeit</p>
+          <div class="spec-val chips-inline" id="season-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Wetter</p>
+          <div class="spec-val chips-inline" id="weather-chips"></div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Zusatz</p>
+          <div class="spec-val" style="align-items:stretch">
+            <label class="sr" for="extra">Eigener Zusatz zum Hauptprompt</label>
+            <textarea id="extra" placeholder="Eigene Ergänzung, die in jeder Szene mitläuft – z. B. Halfter, Jahreszahl, Bildlook."></textarea>
+          </div>
+        </div>
+
+        <pre class="preview" id="base-preview"></pre>
+      </section>
+
+      <div id="scenes" class="editor"></div>
+
+      <div class="row">
+        <button class="btn btn-ghost" id="add-scene" type="button">+ Szene hinzufügen</button>
+        <button class="btn btn-ghost" id="load-test" type="button">Testlauf vom 18.09.2026 laden (10 Szenen)</button>
+        <button class="btn btn-ghost" id="reset" type="button">Alles leeren</button>
+      </div>
+    </div>
+
+    <section class="panel output">
+      <div class="panel-head">
+        <h2 class="eyebrow">Ausgabe</h2>
+        <span class="tags" id="charcount"></span>
+      </div>
+      <div class="tabs" role="radiogroup" aria-label="Ausgabeformat">
+        <label class="tab"><input type="radio" name="view" id="view-full" value="full"><span>Briefing</span></label>
+        <label class="tab"><input type="radio" name="view" id="view-scenes" value="scenes"><span>Nur Prompts</span></label>
+        <label class="tab"><input type="radio" name="view" id="view-order" value="order"><span>Chat-Auftrag</span></label>
+      </div>
+      <pre class="out" id="out" aria-live="polite"></pre>
+      <div class="out-foot">
+        <button class="btn btn-primary" id="copy-all" type="button">Ansicht kopieren</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var BT = String.fromCharCode(96); /* Backtick für die Kamera-Tags im Prompt */
+
+  /* =====================================================================
+     Auswahllisten. Neue Option? Hier eine Zeile ergänzen – Chips, Prompt
+     und Aufruf bauen sich daraus von selbst.
+  ====================================================================== */
+
+  var MODES = [
+    {id:"omni_reference", de:"omni_reference", why:"Referenzbilder"},
+    {id:"t2v",            de:"t2v",            why:"nur Text"}
+  ];
+  var RESOLUTIONS = [{id:"480p",de:"480p"},{id:"720p",de:"720p"},{id:"1080p",de:"1080p"}];
+  var ASPECTS = ["16:9","9:16","1:1","4:3","3:4","21:9","auto"].map(function(a){ return {id:a, de:a}; });
+  var AUDIO = [
+    {id:"off", de:"stumm · generate_audio: false"},
+    {id:"on",  de:"mit Ton · generate_audio: true"}
+  ];
+  var BITRATES = [{id:"standard",de:"standard"},{id:"high",de:"high"}];
+
+  var BLOCKS = [
+    {id:"identity", de:"Pferde-Identität", text:"Exakt das Pferd aus den hochgeladenen Referenzbildern — identische Fellfarbe, identische Abzeichen (Blesse, Socken, Flecken) und identische Zeichnung/Wirbel wie in der Referenz, keine Abweichung in Fellmuster, Kopfform oder Statur.", needsRef:true},
+    {id:"environment", de:"Umgebungs-Identität", text:"Die Umgebung folgt exakt dem bereitgestellten Referenzbild für diese Szenerie — gleiche Landschaft, gleiche Vegetation, gleicher Bildaufbau und gleiche Lichtstimmung wie im Referenzbild, keine frei erfundene oder abweichende Umgebung.", needsRef:true}
+  ];
+
+  var HOOVES = [
+    {id:"none",  de:"ohne Angabe", text:""},
+    {id:"bare",  de:"unbeschlagen", text:"Unbeschlagene Hufe, keine Hufeisen sichtbar, natürliche nackte Hufe."},
+    {id:"shod",  de:"beschlagen",   text:"Beschlagene Hufe mit Hufeisen, exakt wie im Referenzbild."}
+  ];
+
+  var TIMES = [
+    {id:"none",de:"ohne",text:""},
+    {id:"morgens",de:"Morgens",text:"Morgens"},
+    {id:"vormittags",de:"Vormittags",text:"Vormittags"},
+    {id:"mittags",de:"Mittags",text:"Mittags"},
+    {id:"nachmittags",de:"Nachmittags",text:"Nachmittags"},
+    {id:"golden",de:"Goldene Stunde",text:"Zur goldenen Stunde"},
+    {id:"abends",de:"Abends",text:"Abends"},
+    {id:"blau",de:"Blaue Stunde",text:"Zur blauen Stunde"},
+    {id:"nachts",de:"Nachts",text:"Nachts"}
+  ];
+  var SEASONS = [
+    {id:"none",de:"ohne",text:""},
+    {id:"fruehling",de:"Frühling",text:"Frühling"},
+    {id:"sommer",de:"Sommer",text:"Sommer"},
+    {id:"herbst",de:"Herbst",text:"Herbst"},
+    {id:"winter",de:"Winter",text:"Winter"}
+  ];
+  var WEATHER = [
+    {id:"none",de:"ohne",text:""},
+    {id:"sonnig",de:"Sonnig",text:"Sonnig"},
+    {id:"leicht",de:"Leicht bewölkt",text:"Leicht bewölkt"},
+    {id:"bedeckt",de:"Bedeckt",text:"Bedeckt"},
+    {id:"neblig",de:"Neblig",text:"Neblig"},
+    {id:"regen",de:"Regnerisch",text:"Regnerisch"},
+    {id:"schnee",de:"Schnee",text:"Schneefall"},
+    {id:"wind",de:"Windig",text:"Windig"}
+  ];
+
+  var SILENT = "Kein Hintergrundton, keine Musik, keine Instrumente, kein gesungener oder gespielter Ton jeglicher Art. Das Video entsteht vollständig stumm, ohne jegliche Audiospur. " + BT + "no music, no instruments, no soundtrack, no score, no singing, silent, no audio track" + BT;
+
+  /* -------- Spalten der Szenenkarte -------- */
+
+  var ACTIONS = [
+    {id:"none",    de:"ohne Vorgabe",    en:"–",                 text:""},
+    {id:"gallop",  de:"Galopp",          en:"galloping",         text:"Referenzpferd galoppiert.", fast:true},
+    {id:"trot",    de:"Trab",            en:"trotting",          text:"Referenzpferd trabt.", fast:true},
+    {id:"trotHigh",de:"Trab, Knieaktion",en:"high knee action",  text:"Referenzpferd trabt mit hoher Knieaktion.", fast:true},
+    {id:"proud",   de:"Stolze Haltung",  en:"proud carriage",    text:"Referenzpferd trabt mit erhobenem Kopf, stolze Haltung.", fast:true},
+    {id:"walk",    de:"Schritt",         en:"walking",           text:"Referenzpferd geht ruhig im Schritt."},
+    {id:"stand",   de:"Ruhig stehend",   en:"standing calm",     text:"Referenzpferd steht ruhig."},
+    {id:"graze",   de:"Grasen",          en:"grazing",           text:"Referenzpferd grast."},
+    {id:"lips",    de:"Lippen beim Grasen", en:"lips grazing",   text:"Referenzpferd rupft mit den Lippen Grashalme."},
+    {id:"mane",    de:"Mähne im Wind",   en:"mane in the wind",  text:"Die Mähne des Referenzpferds weht im Wind."},
+    {id:"coat",    de:"Licht auf dem Fell", en:"light on coat",  text:"Das Licht wandert sanft über das Fell des Referenzpferds."},
+    {id:"rub",     de:"Kopf reiben",     en:"rubbing head",      text:"Referenzpferd reibt den Kopf sanft am eigenen Bein."},
+    {id:"shake",   de:"Schütteln",       en:"shaking",           text:"Referenzpferd schüttelt sich."},
+    {id:"roll",    de:"Wälzen",          en:"rolling",           text:"Referenzpferd wälzt sich am Boden."},
+    {id:"rear",    de:"Steigen",         en:"rearing",           text:"Referenzpferd steigt.", fast:true},
+    {id:"jump",    de:"Sprung",          en:"jumping",           text:"Referenzpferd springt.", fast:true},
+    {id:"ears",    de:"Ohrenspiel",      en:"ears pricked",      text:"Referenzpferd spitzt aufmerksam die Ohren."}
+  ];
+
+  var PERSPECTIVES = [
+    {id:"none",  de:"ohne Angabe",      en:"–",                tag:""},
+    {id:"bird",  de:"Vogelperspektive", en:"bird's eye",       tag:"bird's eye"},
+    {id:"high",  de:"Aufsicht",         en:"high angle",       tag:"high angle"},
+    {id:"eye",   de:"Augenhöhe",        en:"eye-level",        tag:"eye-level"},
+    {id:"low",   de:"Untersicht",       en:"low angle",        tag:"low angle"},
+    {id:"worm",  de:"Froschperspektive",en:"worm's eye view",  tag:"worm's eye view"},
+    {id:"drone", de:"Drohnenflug",      en:"aerial view",      tag:"aerial view"},
+    {id:"ots",   de:"Über die Schulter",en:"over-the-shoulder",tag:"over-the-shoulder"}
+  ];
+
+  var SHOTS = [
+    {id:"none",   de:"ohne Angabe",   en:"–",                 tag:""},
+    {id:"macro",  de:"Makroaufnahme", en:"extreme close-up",  tag:"extreme close-up", why:"Winzige Details: Auge, Nüstern, einzelne Fellhaare."},
+    {id:"close",  de:"Nahaufnahme",   en:"close-up",          tag:"close-up",         why:"Kopf des Pferds oder ein einzelnes Körperteil."},
+    {id:"medium", de:"Amerikanische", en:"medium shot",       tag:"medium shot",      why:"Pferd etwa ab Widerrist aufwärts."},
+    {id:"wide",   de:"Totale",        en:"wide shot",         tag:"wide shot",        why:"Pferd komplett, eingebettet in die Landschaft."}
+  ];
+
+  var MOVES = [
+    {id:"static",   de:"Statisch",     en:"static camera", tag:"static camera"},
+    {id:"none",     de:"ohne Angabe",  en:"–",             tag:""},
+    {id:"craneUp",  de:"Kran hoch",    en:"crane up",      tag:"crane up", moving:true},
+    {id:"craneDown",de:"Kran runter",  en:"crane down",    tag:"crane down", moving:true},
+    {id:"orbit",    de:"Orbit",        en:"orbit",         tag:"orbit", moving:true},
+    {id:"dollyIn",  de:"Fahrt heran",  en:"dolly in",      tag:"dolly in", moving:true},
+    {id:"dollyOut", de:"Fahrt zurück", en:"dolly out",     tag:"dolly out", moving:true},
+    {id:"track",    de:"Mitfahrt",     en:"tracking shot", tag:"tracking shot", moving:true},
+    {id:"pan",      de:"Schwenk",      en:"pan",           tag:"pan", moving:true},
+    {id:"handheld", de:"Handkamera",   en:"handheld",      tag:"handheld", moving:true}
+  ];
+
+  var DURATIONS = [5,8,10,15];
+
+  /* ===================== Zustand ===================== */
+
+  var STORE_KEY = "pferdeszenen-baukasten-v1";
+  var RULE = "──────────────────────────────────────";
+
+  function uid(){ return "s" + Math.random().toString(36).slice(2,9); }
+
+  function scene(o){
+    return {
+      id:uid(),
+      title:o.title || "",
+      action:o.action || "none",
+      desc:o.desc || "",
+      dur:o.dur || 5,
+      persp:o.persp || "none",
+      shot:o.shot || "none",
+      move:o.move || "static"
+    };
+  }
+
+  function testRun(){
+    return [
+      scene({title:"Galopp von unten",      action:"gallop",   desc:"Kamerafahrt von unten nach oben entlang des galoppierenden Körpers.", dur:10, persp:"low",  shot:"none",  move:"craneUp"}),
+      scene({title:"Trab in der Seitenansicht", action:"proud", desc:"Seitenansicht.", dur:5, persp:"none", shot:"wide", move:"static"}),
+      scene({title:"Galopp von oben",       action:"gallop",   desc:"Luftperspektive, von oben sichtbar.", dur:10, persp:"bird", shot:"none", move:"none"}),
+      scene({title:"Mähne im Wind",         action:"mane",     desc:"Im Galopp, Nahaufnahme.", dur:5, persp:"none", shot:"close", move:"static"}),
+      scene({title:"Orbit um den Galopp",   action:"gallop",   desc:"Kamera orbitet langsam um das Motiv.", dur:10, persp:"none", shot:"wide", move:"orbit"}),
+      scene({title:"Hohe Knieaktion",       action:"trotHigh", desc:"Nahaufnahme der Vorderbeine.", dur:10, persp:"none", shot:"close", move:"static"}),
+      scene({title:"Licht auf dem Fell",    action:"coat",     desc:"Nahaufnahme des Fells.", dur:5, persp:"none", shot:"close", move:"static"}),
+      scene({title:"Grasende Lippen",       action:"lips",     desc:"Nahaufnahme der Lippen beim Grasen, Grashalme werden gerupft.", dur:10, persp:"none", shot:"close", move:"static"}),
+      scene({title:"Kopf am Bein",          action:"rub",      desc:"Nahaufnahme.", dur:5, persp:"none", shot:"close", move:"static"}),
+      scene({title:"Ruhe von oben",         action:"stand",    desc:"Vogelperspektive auf ein ruhig stehendes Pferd auf grüner Weide.", dur:10, persp:"bird", shot:"none", move:"orbit"})
+    ];
+  }
+
+  function fresh(){
+    return {
+      mode:"omni_reference",
+      res:"720p",
+      aspect:"16:9",
+      audio:"off",
+      bitrate:"standard",
+      refHorse:"",
+      refEnv:"",
+      rates:{"480p":null, "720p":6.5, "1080p":null},
+      blocks:{identity:true, environment:true},
+      hoof:"bare",
+      time:"mittags",
+      season:"herbst",
+      weather:"neblig",
+      extra:"",
+      view:"full",
+      scenes:testRun()
+    };
+  }
+
+  var state = load() || fresh();
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(!raw) return null;
+      var d = JSON.parse(raw);
+      if(!d || !Array.isArray(d.scenes) || !d.scenes.length) return null;
+      var base = fresh();
+      Object.keys(base).forEach(function(k){ if(typeof d[k] === "undefined") d[k] = base[k]; });
+      if(!d.rates) d.rates = base.rates;
+      d.scenes.forEach(function(s){ if(!s.id) s.id = uid(); });
+      return d;
+    }catch(e){ return null; }
+  }
+
+  var saveTimer = null;
+  function save(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){
+      try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+    }, 250);
+  }
+
+  function find(list, id){
+    for(var i=0;i<list.length;i++){ if(list[i].id === id) return list[i]; }
+    return list[0];
+  }
+  function usesReferences(){ return state.mode === "omni_reference"; }
+
+  /* ===================== Prompttexte ===================== */
+
+  function basePrompt(){
+    var parts = [];
+    BLOCKS.forEach(function(b){ if(state.blocks[b.id]) parts.push(b.text); });
+
+    var hoof = find(HOOVES, state.hoof).text;
+    if(hoof){
+      /* Hufe gehören direkt hinter die Identität des Pferds */
+      var at = state.blocks.identity ? 1 : 0;
+      parts.splice(at, 0, hoof);
+    }
+
+    var t = find(TIMES, state.time).text;
+    var s = find(SEASONS, state.season).text;
+    var w = find(WEATHER, state.weather).text;
+    var env = [];
+    if(t) env.push("Tageszeit: " + t + ".");
+    if(s) env.push("Jahreszeit: " + s + ".");
+    if(w) env.push("Wetter: " + w + ".");
+    if(env.length){
+      if(state.blocks.environment){
+        env.push("Genau wie angegeben in der Referenzumgebung, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter als vorgegeben.");
+      } else {
+        env.push("Genau wie angegeben, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter.");
+      }
+      parts.push(env.join(" "));
+    }
+
+    if(state.extra.trim()) parts.push(state.extra.trim());
+    if(state.audio === "off") parts.push(SILENT);
+
+    return parts.join(" ");
+  }
+
+  function tagsOf(s){
+    var list = [];
+    var p = find(PERSPECTIVES, s.persp).tag;
+    var sh = find(SHOTS, s.shot).tag;
+    var mv = find(MOVES, s.move).tag;
+    if(p) list.push(p);
+    if(sh) list.push(sh);
+    if(mv) list.push(mv);
+    return list.join(", ");
+  }
+
+  function scenePrompt(s){
+    var parts = [];
+    var act = find(ACTIONS, s.action).text;
+    if(act) parts.push(act);
+
+    var desc = s.desc.trim();
+    var tags = tagsOf(s);
+    if(desc){
+      if(!/[.!?]$/.test(desc)) desc += ".";
+      /* Tags hängen am letzten Satz der Szenenbeschreibung */
+      if(tags) desc = desc.replace(/\.$/, ", " + BT + tags + BT + ".");
+      parts.push(desc);
+    } else if(tags){
+      parts.push(BT + tags + BT + ".");
+    }
+
+    var base = basePrompt();
+    if(base) parts.push(base);
+    return parts.join(" ");
+  }
+
+  function riskOf(s){
+    return find(ACTIONS, s.action).fast && find(MOVES, s.move).moving;
+  }
+
+  /* ===================== Ausgabe ===================== */
+
+  function totalSeconds(){
+    return state.scenes.reduce(function(sum, s){ return sum + (Number(s.dur) || 0); }, 0);
+  }
+  function rate(){
+    var r = state.rates[state.res];
+    return (typeof r === "number" && r > 0) ? r : null;
+  }
+  function creditText(){
+    var r = rate();
+    if(!r) return null;
+    var total = Math.round(totalSeconds() * r);
+    return "ca. " + total.toLocaleString("de-DE") + " Credits";
+  }
+
+  function techBlock(){
+    var lines = [];
+    lines.push("Modell             seedance_2_5");
+    lines.push("Modus              " + state.mode);
+    lines.push("Auflösung          " + state.res);
+    lines.push("Seitenverhältnis   " + state.aspect);
+    lines.push("Ton                generate_audio: " + (state.audio === "off" ? "false" : "true"));
+    lines.push("Bitrate            " + state.bitrate);
+    if(usesReferences()){
+      lines.push("Referenzbilder     2 × Rolle image_references");
+      lines.push("  Pferd            " + (state.refHorse.trim() || "<media_id nach dem Upload eintragen>"));
+      lines.push("  Umgebung         " + (state.refEnv.trim() || "<media_id nach dem Upload eintragen>"));
+    } else {
+      lines.push("Referenzbilder     keine (Modus t2v)");
+    }
+    var credits = creditText();
+    lines.push("Umfang             " + state.scenes.length + " Szenen · " + totalSeconds() + " s" + (credits ? " · " + credits : ""));
+    return lines.join("\n");
+  }
+
+  function sceneHeading(s, i){
+    var bits = [String(s.dur) + " s"];
+    var tags = tagsOf(s);
+    if(tags) bits.push(tags);
+    return "SZENE " + (i+1) + " · " + (s.title.trim() || "Ohne Titel") + " · " + bits.join(" · ") + (riskOf(s) ? "  ⚠" : "");
+  }
+
+  function viewFull(){
+    var out = ["HIGGSFIELD-AUFRUF · SEEDANCE 2.5", RULE, techBlock()];
+    var base = basePrompt();
+    if(base) out.push("", "HAUPTPROMPT-BLOCK · hängt an jeder Szene", RULE, base);
+    state.scenes.forEach(function(s, i){
+      out.push("", sceneHeading(s, i), RULE, scenePrompt(s));
+    });
+    var risky = state.scenes.filter(riskOf).length;
+    if(risky){
+      out.push("", "⚠ " + risky + " Szene(n) kombinieren bewegte Kamera mit schneller Gangart — im Testlauf die fehleranfälligste Kombination.");
+    }
+    return out.join("\n");
+  }
+
+  function viewScenes(){
+    return state.scenes.map(function(s, i){
+      return sceneHeading(s, i) + "\n" + RULE + "\n" + scenePrompt(s);
+    }).join("\n\n");
+  }
+
+  function viewOrder(){
+    var out = [];
+    out.push("Bitte erzeuge diese Pferdevideos mit Higgsfield (generate_video_batch).");
+    out.push("");
+    out.push("Technisch für alle Szenen gleich:");
+    out.push("- model: seedance_2_5");
+    out.push("- mode: " + state.mode);
+    out.push("- resolution: " + state.res);
+    out.push("- aspect_ratio: " + state.aspect);
+    out.push("- generate_audio: " + (state.audio === "off" ? "false" : "true") +
+             (state.audio === "off" ? "   ← als technischen Parameter setzen, nicht nur im Prompttext. Der Default ist true." : ""));
+    out.push("- bitrate_mode: " + state.bitrate);
+    if(usesReferences()){
+      out.push("- medias: 2 Bilder, beide mit Rolle image_references");
+      out.push("  1) Pferd:    " + (state.refHorse.trim() || "<lade ich neu hoch>"));
+      out.push("  2) Umgebung: " + (state.refEnv.trim() || "<lade ich neu hoch>"));
+      out.push("");
+      out.push("Die Referenzbilder lade ich neu hoch, wenn du danach fragst – media_ids aus früheren Chats gelten nicht mehr.");
+    }
+    var credits = creditText();
+    out.push("");
+    out.push("Umfang: " + state.scenes.length + " Szenen, " + totalSeconds() + " Sekunden gesamt" + (credits ? ", " + credits : "") + ".");
+    out.push("");
+    out.push("Szenen – der Prompttext steht jeweils komplett hier, bitte unverändert übernehmen:");
+    state.scenes.forEach(function(s, i){
+      out.push("");
+      out.push((i+1) + ") duration: " + s.dur + " s — " + (s.title.trim() || "Ohne Titel"));
+      out.push(scenePrompt(s));
+    });
+    return out.join("\n");
+  }
+
+  function currentView(){
+    if(state.view === "scenes") return viewScenes();
+    if(state.view === "order") return viewOrder();
+    return viewFull();
+  }
+
+  /* ===================== Aufbau der Oberfläche ===================== */
+
+  var el = function(id){ return document.getElementById(id); };
+  var scenesEl = el("scenes"), outEl = el("out"), toastEl = el("toast");
+
+  function chipGroup(host, name, options, current, onPick, opts){
+    opts = opts || {};
+    host.textContent = "";
+    options.forEach(function(opt){
+      var chip = document.createElement("label");
+      chip.className = "chip";
+
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = name;
+      input.id = name + "-" + opt.id;
+      input.checked = String(current) === String(opt.id);
+      input.addEventListener("change", function(){ if(input.checked) onPick(opt.id); });
+
+      var box = document.createElement("span");
+      box.className = "box";
+
+      var de = document.createElement("span");
+      de.className = "de";
+      de.textContent = opt.de;
+      box.appendChild(de);
+
+      if(opts.showEn && opt.en){
+        var en = document.createElement("span");
+        en.className = "en";
+        en.textContent = opt.en;
+        box.appendChild(en);
+      }
+      if(opts.showWhy && opt.why){
+        var why = document.createElement("span");
+        why.className = "why";
+        why.textContent = opt.why;
+        box.appendChild(why);
+      }
+      if(opt.why && !opts.showWhy) chip.title = opt.why;
+
+      chip.appendChild(input);
+      chip.appendChild(box);
+      host.appendChild(chip);
+    });
+  }
+
+  function buildTech(){
+    chipGroup(el("mode-chips"), "mode", MODES, state.mode, function(v){ state.mode = v; buildTech(); render(); save(); });
+    chipGroup(el("res-chips"), "res", RESOLUTIONS, state.res, function(v){ state.res = v; syncRate(); render(); save(); });
+    chipGroup(el("ar-chips"), "ar", ASPECTS, state.aspect, function(v){ state.aspect = v; render(); save(); });
+    chipGroup(el("audio-chips"), "audio", AUDIO, state.audio, function(v){ state.audio = v; buildTech(); render(); save(); });
+    chipGroup(el("bitrate-chips"), "bitrate", BITRATES, state.bitrate, function(v){ state.bitrate = v; render(); save(); });
+
+    el("mode-note").textContent = usesReferences()
+      ? "omni_reference nimmt die Referenzbilder als verbindliche Vorlage für Pferd und Umgebung."
+      : "t2v arbeitet ohne Referenzbilder – die Bausteine zur Pferde- und Umgebungs-Identität laufen dann ins Leere.";
+
+    var audioNote = el("audio-note");
+    if(state.audio === "off"){
+      audioNote.className = "spec-note";
+      audioNote.textContent = "generate_audio: false wird als technischer Parameter gesetzt und der Stumm-Satz zusätzlich in den Hauptprompt geschrieben. Seedance 2.5 erzeugt sonst per Default eine Tonspur.";
+    } else {
+      audioNote.className = "spec-note warn";
+      audioNote.textContent = "Achtung: Seedance 2.5 erzeugt dann eine Tonspur. Der Stumm-Satz verschwindet aus dem Hauptprompt.";
+    }
+  }
+
+  function buildBase(){
+    var host = el("block-chips");
+    host.textContent = "";
+    BLOCKS.forEach(function(b){
+      var chip = document.createElement("label");
+      chip.className = "chip";
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.id = "block-" + b.id;
+      input.checked = !!state.blocks[b.id];
+      input.addEventListener("change", function(){
+        state.blocks[b.id] = input.checked;
+        buildBase(); render(); save();
+      });
+      var box = document.createElement("span");
+      box.className = "box";
+      var de = document.createElement("span");
+      de.className = "de";
+      de.textContent = b.de;
+      box.appendChild(de);
+      chip.title = b.text;
+      chip.appendChild(input);
+      chip.appendChild(box);
+      host.appendChild(chip);
+    });
+
+    chipGroup(el("hoof-chips"), "hoof", HOOVES, state.hoof, function(v){ state.hoof = v; render(); save(); });
+    chipGroup(el("time-chips"), "time", TIMES, state.time, function(v){ state.time = v; render(); save(); });
+    chipGroup(el("season-chips"), "season", SEASONS, state.season, function(v){ state.season = v; render(); save(); });
+    chipGroup(el("weather-chips"), "weather", WEATHER, state.weather, function(v){ state.weather = v; render(); save(); });
+  }
+
+  function iconBtn(glyph, label, disabled, onClick){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "icon-btn";
+    b.textContent = glyph;
+    b.title = label;
+    b.setAttribute("aria-label", label);
+    b.disabled = !!disabled;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function column(label, build){
+    var wrap = document.createElement("div");
+    wrap.className = "col";
+    var head = document.createElement("p");
+    head.className = "eyebrow";
+    head.textContent = label;
+    wrap.appendChild(head);
+    var stack = document.createElement("div");
+    stack.className = "col-stack";
+    build(stack);
+    wrap.appendChild(stack);
+    return wrap;
+  }
+
+  function buildScene(s, index){
+    var card = document.createElement("section");
+    card.className = "scene";
+
+    var head = document.createElement("div");
+    head.className = "scene-head";
+    var slate = document.createElement("div");
+    slate.className = "slate";
+    slate.textContent = "SZ " + (index < 9 ? "0" : "") + (index+1);
+    head.appendChild(slate);
+
+    var titleLabel = document.createElement("label");
+    titleLabel.className = "sr";
+    titleLabel.setAttribute("for", "title-" + s.id);
+    titleLabel.textContent = "Titel von Szene " + (index+1);
+    var title = document.createElement("input");
+    title.type = "text";
+    title.id = "title-" + s.id;
+    title.className = "scene-title";
+    title.placeholder = "Szenentitel";
+    title.value = s.title;
+    title.addEventListener("input", function(){ s.title = title.value; render(); save(); });
+    head.appendChild(titleLabel);
+    head.appendChild(title);
+
+    var actions = document.createElement("div");
+    actions.className = "scene-actions";
+    actions.appendChild(iconBtn("↑", "Szene nach oben", index === 0, function(){ move(index,-1); }));
+    actions.appendChild(iconBtn("↓", "Szene nach unten", index === state.scenes.length-1, function(){ move(index,1); }));
+    actions.appendChild(iconBtn("⧉", "Szene duplizieren", false, function(){ duplicate(index); }));
+    actions.appendChild(iconBtn("✕", "Szene löschen", state.scenes.length === 1, function(){ remove(index); }));
+    head.appendChild(actions);
+    card.appendChild(head);
+
+    var body = document.createElement("div");
+    body.className = "scene-body";
+    var descLabel = document.createElement("label");
+    descLabel.className = "sr";
+    descLabel.setAttribute("for", "desc-" + s.id);
+    descLabel.textContent = "Beschreibung von Szene " + (index+1);
+    var desc = document.createElement("textarea");
+    desc.id = "desc-" + s.id;
+    desc.placeholder = "Was die Kamera zusätzlich tut oder zeigt – die Kamera-Tags hängt der Baukasten selbst an.";
+    desc.value = s.desc;
+    desc.addEventListener("input", function(){ s.desc = desc.value; render(); save(); });
+    body.appendChild(descLabel);
+    body.appendChild(desc);
+    card.appendChild(body);
+
+    var cols = document.createElement("div");
+    cols.className = "cols";
+
+    cols.appendChild(column("Länge", function(stack){
+      var row = document.createElement("div");
+      row.className = "chips-inline";
+      DURATIONS.forEach(function(d){
+        var chip = document.createElement("label");
+        chip.className = "chip";
+        var input = document.createElement("input");
+        input.type = "radio";
+        input.name = "dur-" + s.id;
+        input.id = "dur-" + d + "-" + s.id;
+        input.checked = Number(s.dur) === d;
+        input.addEventListener("change", function(){ if(input.checked){ s.dur = d; renderScenes(); render(); save(); } });
+        var box = document.createElement("span");
+        box.className = "box";
+        var de = document.createElement("span");
+        de.className = "de";
+        de.textContent = d + " s";
+        box.appendChild(de);
+        chip.appendChild(input);
+        chip.appendChild(box);
+        row.appendChild(chip);
+      });
+      stack.appendChild(row);
+
+      var freeLabel = document.createElement("label");
+      freeLabel.className = "sr";
+      freeLabel.setAttribute("for", "durfree-" + s.id);
+      freeLabel.textContent = "Eigene Länge in Sekunden";
+      var free = document.createElement("input");
+      free.type = "number";
+      free.className = "inp";
+      free.id = "durfree-" + s.id;
+      free.min = 4; free.max = 30; free.step = 1;
+      free.value = s.dur;
+      free.addEventListener("input", function(){
+        var v = Math.max(4, Math.min(30, Number(free.value) || 4));
+        s.dur = v;
+        row.querySelectorAll("input").forEach(function(i){ i.checked = Number(i.id.split("-")[1]) === v; });
+        render(); save();
+      });
+      stack.appendChild(freeLabel);
+      stack.appendChild(free);
+
+      var hint = document.createElement("span");
+      hint.className = "chip-hint eyebrow";
+      hint.style.letterSpacing = ".04em";
+      hint.style.fontSize = "10px";
+      hint.textContent = "4–30 s möglich";
+      stack.appendChild(hint);
+    }));
+
+    cols.appendChild(column("Aktion", function(stack){
+      chipGroup(stack, "action-" + s.id, ACTIONS, s.action, function(v){ s.action = v; renderScenes(); render(); save(); }, {showEn:true});
+    }));
+
+    cols.appendChild(column("Perspektive", function(stack){
+      chipGroup(stack, "persp-" + s.id, PERSPECTIVES, s.persp, function(v){ s.persp = v; renderScenes(); render(); save(); }, {showEn:true});
+    }));
+
+    cols.appendChild(column("Einstellungsgröße", function(stack){
+      chipGroup(stack, "shot-" + s.id, SHOTS, s.shot, function(v){ s.shot = v; renderScenes(); render(); save(); }, {showEn:true, showWhy:true});
+    }));
+
+    cols.appendChild(column("Kamerabewegung", function(stack){
+      chipGroup(stack, "move-" + s.id, MOVES, s.move, function(v){ s.move = v; renderScenes(); render(); save(); }, {showEn:true});
+    }));
+
+    card.appendChild(cols);
+
+    if(riskOf(s)){
+      var flag = document.createElement("p");
+      flag.className = "flag";
+      flag.textContent = "⚠ Bewegte Kamera und schnelle Gangart zusammen – im Testlauf die fehleranfälligste Kombination. Statische Kamera oder ruhigere Gangart senkt das Risiko.";
+      card.appendChild(flag);
+    }
+
+    var foot = document.createElement("div");
+    foot.className = "scene-foot";
+    var tags = document.createElement("span");
+    tags.className = "tags";
+    var t = tagsOf(s);
+    tags.textContent = t ? BT + t + BT : "ohne Kamera-Tags";
+    foot.appendChild(tags);
+
+    var copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "btn btn-sm";
+    copyBtn.textContent = "Prompt kopieren";
+    copyBtn.addEventListener("click", function(){ copy(scenePrompt(s), "Szenen-Prompt kopiert"); });
+    foot.appendChild(copyBtn);
+    card.appendChild(foot);
+
+    return card;
+  }
+
+  function renderScenes(){
+    scenesEl.textContent = "";
+    state.scenes.forEach(function(s, i){ scenesEl.appendChild(buildScene(s, i)); });
+  }
+
+  function syncRate(){
+    var r = state.rates[state.res];
+    el("rate").value = (typeof r === "number" && r > 0) ? r : "";
+    el("rate-res").textContent = state.res;
+  }
+
+  function render(){
+    var text = currentView();
+    outEl.textContent = text;
+    el("charcount").textContent = text.length.toLocaleString("de-DE") + " Zeichen";
+    el("base-preview").textContent = basePrompt() || "Keine Bausteine aktiv – der Hauptprompt-Block bleibt leer.";
+    el("stat-scenes").textContent = state.scenes.length;
+    el("stat-secs").textContent = totalSeconds() + " s";
+    var r = rate();
+    el("stat-credits").textContent = r ? Math.round(totalSeconds() * r).toLocaleString("de-DE") : "–";
+  }
+
+  /* ===================== Aktionen ===================== */
+
+  function move(index, delta){
+    var target = index + delta;
+    if(target < 0 || target >= state.scenes.length) return;
+    state.scenes.splice(target, 0, state.scenes.splice(index,1)[0]);
+    renderScenes(); render(); save();
+  }
+  function duplicate(index){
+    var c = JSON.parse(JSON.stringify(state.scenes[index]));
+    c.id = uid();
+    state.scenes.splice(index+1, 0, c);
+    renderScenes(); render(); save();
+  }
+  function remove(index){
+    if(state.scenes.length === 1) return;
+    state.scenes.splice(index,1);
+    renderScenes(); render(); save();
+  }
+
+  function toast(message){
+    toastEl.textContent = message;
+    toastEl.classList.add("show");
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1800);
+  }
+
+  function copy(value, message){
+    var done = function(){ toast(message); };
+    var fallback = function(){
+      var ta = document.createElement("textarea");
+      ta.value = value;
+      ta.setAttribute("readonly","");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand("copy"); done(); }
+      catch(e){ toast("Kopieren nicht möglich – Text bitte markieren."); }
+      document.body.removeChild(ta);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(value).then(done, fallback);
+    } else { fallback(); }
+  }
+
+  /* ===================== Verdrahtung ===================== */
+
+  el("ref-horse").value = state.refHorse;
+  el("ref-horse").addEventListener("input", function(e){ state.refHorse = e.target.value; render(); save(); });
+  el("ref-env").value = state.refEnv;
+  el("ref-env").addEventListener("input", function(e){ state.refEnv = e.target.value; render(); save(); });
+
+  el("extra").value = state.extra;
+  el("extra").addEventListener("input", function(e){ state.extra = e.target.value; render(); save(); });
+
+  el("rate").addEventListener("input", function(e){
+    var v = Number(e.target.value);
+    state.rates[state.res] = (v > 0) ? v : null;
+    render(); save();
+  });
+
+  el("view-" + state.view).checked = true;
+  ["full","scenes","order"].forEach(function(v){
+    el("view-" + v).addEventListener("change", function(e){
+      if(!e.target.checked) return;
+      state.view = v; render(); save();
+    });
+  });
+
+  el("add-scene").addEventListener("click", function(){
+    state.scenes.push(scene({}));
+    renderScenes(); render(); save();
+    var last = scenesEl.lastElementChild;
+    if(last){
+      last.scrollIntoView({behavior:"smooth", block:"center"});
+      var field = last.querySelector(".scene-title");
+      if(field) field.focus();
+    }
+  });
+
+  el("load-test").addEventListener("click", function(){
+    state.scenes = testRun();
+    state.mode = "omni_reference"; state.res = "720p"; state.aspect = "16:9";
+    state.audio = "off"; state.bitrate = "standard";
+    state.blocks = {identity:true, environment:true};
+    state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig";
+    buildTech(); buildBase(); syncRate(); renderScenes(); render(); save();
+    toast("Testlauf geladen: 10 Szenen, 80 Sekunden");
+  });
+
+  el("reset").addEventListener("click", function(){
+    state.scenes = [scene({})];
+    state.extra = ""; el("extra").value = "";
+    renderScenes(); render(); save();
+    toast("Szenen geleert");
+  });
+
+  el("copy-base").addEventListener("click", function(){ copy(basePrompt(), "Hauptprompt-Block kopiert"); });
+  el("copy-all").addEventListener("click", function(){ copy(currentView(), "Ansicht kopiert"); });
+
+  buildTech();
+  buildBase();
+  syncRate();
+  renderScenes();
+  render();
+})();
+</script>
+</html>
