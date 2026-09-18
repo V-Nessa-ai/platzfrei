@@ -662,6 +662,7 @@
       extra:"",
       view:"full",
       panels:{tech:false, base:false},
+      emptyStart:true,
       scenes:[]
     };
   }
@@ -687,6 +688,14 @@
       if(!Array.isArray(d.refEnvs) || !d.refEnvs.length) d.refEnvs = [""];
       if(d.rates) delete d.rates["480p"];
       if(!d.panels) d.panels = {tech:false, base:false};
+
+      /* Einmalig: Wer noch die vorgeladenen Szenen älterer Fassungen
+         gespeichert hat, startet ab hier mit leerer Liste. Alle übrigen
+         Einstellungen bleiben erhalten. */
+      if(!d.emptyStart){
+        d.scenes = [];
+        d.emptyStart = true;
+      }
       d.mode = "omni_reference";
       if(!d.blocks) d.blocks = {};
       ["identity","gear","environment"].forEach(function(k){
