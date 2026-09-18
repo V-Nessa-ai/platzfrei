@@ -158,6 +158,19 @@
   .chips-inline .chip .de{font-size:12.5px}
   .chips-inline .chip .en{display:none}
 
+  /* ---------- Einklappen ---------- */
+  .scene.is-collapsed .scene-body,
+  .scene.is-collapsed .cols,
+  .scene.is-collapsed .scene-foot,
+  .scene.is-collapsed .flag{display:none}
+  .scene.is-collapsed .scene-head{border-bottom:none}
+  .summary{
+    flex:1 1 100%;order:9;margin:0;padding:0 12px 4px 13px;
+    font-family:var(--mono);font-size:11px;line-height:1.45;color:var(--muted);word-break:break-word;
+  }
+  .scene:not(.is-collapsed) .summary{display:none}
+  .summary .risk{color:var(--alert)}
+
   /* ---------- Hauptprompt ---------- */
   .field{padding:13px 16px}
   .field textarea{min-height:64px}
@@ -170,11 +183,18 @@
 
   /* ---------- Szenen ---------- */
   .scene{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-  .scene-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 0;border-bottom:1px solid var(--line);background:var(--surface-2)}
-  .slate{
-    align-self:stretch;display:flex;align-items:center;padding:0 13px;background:var(--ink);color:var(--bg);
-    font-family:var(--mono);font-size:12px;letter-spacing:.08em;white-space:nowrap;
+  .scene-head{
+    display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:9px 10px 9px 0;
+    border-bottom:1px solid var(--line);background:var(--surface-2);
   }
+  button.slate{
+    align-self:stretch;display:flex;align-items:center;gap:7px;padding:9px 13px;border:none;
+    background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:12px;
+    letter-spacing:.08em;white-space:nowrap;
+  }
+  button.slate:hover{background:var(--accent);color:var(--accent-ink)}
+  button.slate:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+  button.slate .caret{font-size:10px;opacity:.8}
   .scene-title{flex:1 1 170px;min-width:0;font-family:var(--display);font-weight:600;font-size:16.5px;letter-spacing:-.01em}
   .scene-actions{display:flex;gap:3px;flex:0 0 auto}
   button{font:inherit;color:inherit;cursor:pointer}
@@ -188,10 +208,25 @@
 
   .scene-body{padding:13px 16px 2px}
   .scene-body textarea{min-height:56px}
-  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(162px,1fr));gap:16px;padding:14px 16px}
-  .col{display:flex;flex-direction:column;gap:7px;min-width:0}
-  .col > .eyebrow{padding-bottom:5px;border-bottom:1px solid var(--line)}
-  .col-stack{display:flex;flex-direction:column;gap:6px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(192px,1fr));gap:14px 16px;padding:14px 16px}
+  .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .fld > label{
+    font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .sel-wrap{position:relative;display:block}
+  .sel-wrap::after{
+    content:"▾";position:absolute;right:11px;top:50%;transform:translateY(-50%);
+    pointer-events:none;color:var(--muted);font-size:11px;
+  }
+  select.sel{
+    font-family:var(--body);font-size:13.5px;line-height:1.3;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    padding:8px 28px 8px 10px;width:100%;appearance:none;-webkit-appearance:none;cursor:pointer;
+  }
+  select.sel:hover{border-color:var(--line-strong)}
+  select.sel:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .why-hint{margin:0;font-size:11px;line-height:1.35;color:var(--muted);min-height:1.35em}
 
   .scene-foot{
     display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
@@ -289,6 +324,15 @@
           <p class="spec-note" id="audio-note"></p>
         </div>
 
+        <div class="spec" id="ambient-row" hidden>
+          <p class="eyebrow">Geräusche</p>
+          <div class="spec-val" style="align-items:stretch">
+            <label class="sr" for="ambient">Erlaubte Geräusche</label>
+            <input class="inp" type="text" id="ambient" placeholder="Hufschlag, Schnauben, Wind, raschelndes Gras">
+          </div>
+          <p class="spec-note">Diese Geräusche erlaubt der Hauptprompt ausdrücklich – Musik, Instrumente, Gesang und Sprache schließt er ebenso ausdrücklich aus.</p>
+        </div>
+
         <div class="spec">
           <p class="eyebrow">Bitrate</p>
           <div class="spec-val chips-inline" id="bitrate-chips"></div>
@@ -361,6 +405,7 @@
 
       <div class="row">
         <button class="btn btn-ghost" id="add-scene" type="button">+ Szene hinzufügen</button>
+        <button class="btn btn-ghost" id="toggle-all" type="button">Alle einklappen</button>
         <button class="btn btn-ghost" id="load-test" type="button">Testlauf vom 18.09.2026 laden (10 Szenen)</button>
         <button class="btn btn-ghost" id="reset" type="button">Alles leeren</button>
       </div>
@@ -404,9 +449,11 @@
   var RESOLUTIONS = [{id:"480p",de:"480p"},{id:"720p",de:"720p"},{id:"1080p",de:"1080p"}];
   var ASPECTS = ["16:9","9:16","1:1","4:3","3:4","21:9","auto"].map(function(a){ return {id:a, de:a}; });
   var AUDIO = [
-    {id:"off", de:"stumm · generate_audio: false"},
-    {id:"on",  de:"mit Ton · generate_audio: true"}
+    {id:"silent",  de:"stumm"},
+    {id:"ambient", de:"nur Geräusche, keine Musik"},
+    {id:"full",    de:"freie Tonspur"}
   ];
+  var AMBIENT_DEFAULT = "Hufschlag auf dem Boden, Schnauben und Atem des Pferds, Wind, raschelndes Gras";
   var BITRATES = [{id:"standard",de:"standard"},{id:"high",de:"high"}];
 
   var BLOCKS = [
@@ -448,6 +495,14 @@
     {id:"schnee",de:"Schnee",text:"Schneefall"},
     {id:"wind",de:"Windig",text:"Windig"}
   ];
+
+  function ambientPrompt(){
+    var sounds = (state.ambient || "").trim() || AMBIENT_DEFAULT;
+    if(!/[.!?]$/.test(sounds)) sounds += ".";
+    return "Die Tonspur enthält ausschließlich natürliche Geräusche der Szene selbst: " + sounds +
+      " Keine Musik, keine Instrumente, kein Soundtrack, keine Melodie, kein Gesang, keine Stimmen, kein Kommentar. " +
+      BT + "natural ambient sound only, diegetic sound, no music, no instruments, no soundtrack, no score, no singing, no voice-over" + BT;
+  }
 
   var SILENT = "Kein Hintergrundton, keine Musik, keine Instrumente, kein gesungener oder gespielter Ton jeglicher Art. Das Video entsteht vollständig stumm, ohne jegliche Audiospur. " + BT + "no music, no instruments, no soundtrack, no score, no singing, silent, no audio track" + BT;
 
@@ -523,7 +578,8 @@
       dur:o.dur || 5,
       persp:o.persp || "none",
       shot:o.shot || "none",
-      move:o.move || "static"
+      move:o.move || "static",
+      collapsed:false
     };
   }
 
@@ -547,7 +603,8 @@
       mode:"omni_reference",
       res:"720p",
       aspect:"16:9",
-      audio:"off",
+      audio:"silent",
+      ambient:AMBIENT_DEFAULT,
       bitrate:"standard",
       refHorse:"",
       refEnv:"",
@@ -574,7 +631,12 @@
       var base = fresh();
       Object.keys(base).forEach(function(k){ if(typeof d[k] === "undefined") d[k] = base[k]; });
       if(!d.rates) d.rates = base.rates;
-      d.scenes.forEach(function(s){ if(!s.id) s.id = uid(); });
+      if(d.audio === "off") d.audio = "silent";
+      if(d.audio === "on") d.audio = "full";
+      d.scenes.forEach(function(s){
+        if(!s.id) s.id = uid();
+        s.collapsed = !!s.collapsed;
+      });
       return d;
     }catch(e){ return null; }
   }
@@ -623,7 +685,8 @@
     }
 
     if(state.extra.trim()) parts.push(state.extra.trim());
-    if(state.audio === "off") parts.push(SILENT);
+    if(state.audio === "silent") parts.push(SILENT);
+    else if(state.audio === "ambient") parts.push(ambientPrompt());
 
     return parts.join(" ");
   }
@@ -680,13 +743,16 @@
     return "ca. " + total.toLocaleString("de-DE") + " Credits";
   }
 
+  function audioFlag(){ return state.audio === "silent" ? "false" : "true"; }
+
   function techBlock(){
     var lines = [];
     lines.push("Modell             seedance_2_5");
     lines.push("Modus              " + state.mode);
     lines.push("Auflösung          " + state.res);
     lines.push("Seitenverhältnis   " + state.aspect);
-    lines.push("Ton                generate_audio: " + (state.audio === "off" ? "false" : "true"));
+    lines.push("Ton                generate_audio: " + audioFlag() +
+      (state.audio === "ambient" ? "  · nur Geräusche, Musik im Prompt ausgeschlossen" : ""));
     lines.push("Bitrate            " + state.bitrate);
     if(usesReferences()){
       lines.push("Referenzbilder     2 × Rolle image_references");
@@ -736,8 +802,9 @@
     out.push("- mode: " + state.mode);
     out.push("- resolution: " + state.res);
     out.push("- aspect_ratio: " + state.aspect);
-    out.push("- generate_audio: " + (state.audio === "off" ? "false" : "true") +
-             (state.audio === "off" ? "   ← als technischen Parameter setzen, nicht nur im Prompttext. Der Default ist true." : ""));
+    out.push("- generate_audio: " + audioFlag() +
+             (state.audio === "silent" ? "   ← als technischen Parameter setzen, nicht nur im Prompttext. Der Default ist true." : "") +
+             (state.audio === "ambient" ? "   ← Tonspur erwünscht, aber nur Umgebungsgeräusche: der Hauptprompt schließt Musik und Instrumente aus." : ""));
     out.push("- bitrate_mode: " + state.bitrate);
     if(usesReferences()){
       out.push("- medias: 2 Bilder, beide mit Rolle image_references");
@@ -824,12 +891,16 @@
       : "t2v arbeitet ohne Referenzbilder – die Bausteine zur Pferde- und Umgebungs-Identität laufen dann ins Leere.";
 
     var audioNote = el("audio-note");
-    if(state.audio === "off"){
+    el("ambient-row").hidden = (state.audio !== "ambient");
+    if(state.audio === "silent"){
       audioNote.className = "spec-note";
       audioNote.textContent = "generate_audio: false wird als technischer Parameter gesetzt und der Stumm-Satz zusätzlich in den Hauptprompt geschrieben. Seedance 2.5 erzeugt sonst per Default eine Tonspur.";
+    } else if(state.audio === "ambient"){
+      audioNote.className = "spec-note";
+      audioNote.textContent = "generate_audio bleibt true – eine Tonspur entsteht. Der Hauptprompt benennt die erlaubten Geräusche und schließt Musik, Instrumente, Gesang und Sprache aus. Das ist eine Anweisung an das Modell, keine harte Sperre: die fertigen Videos bitte abhören.";
     } else {
       audioNote.className = "spec-note warn";
-      audioNote.textContent = "Achtung: Seedance 2.5 erzeugt dann eine Tonspur. Der Stumm-Satz verschwindet aus dem Hauptprompt.";
+      audioNote.textContent = "Freie Tonspur: Seedance 2.5 legt selbst fest, was zu hören ist – auch Musik. Der Hauptprompt enthält dann keine Tonvorgabe.";
     }
   }
 
@@ -877,30 +948,87 @@
     return b;
   }
 
-  function column(label, build){
+  function selectField(label, options, current, onPick){
     var wrap = document.createElement("div");
-    wrap.className = "col";
-    var head = document.createElement("p");
-    head.className = "eyebrow";
-    head.textContent = label;
-    wrap.appendChild(head);
-    var stack = document.createElement("div");
-    stack.className = "col-stack";
-    build(stack);
-    wrap.appendChild(stack);
+    wrap.className = "fld";
+    var id = "f" + Math.random().toString(36).slice(2,9);
+
+    var lab = document.createElement("label");
+    lab.setAttribute("for", id);
+    lab.textContent = label;
+    wrap.appendChild(lab);
+
+    var shell = document.createElement("div");
+    shell.className = "sel-wrap";
+    var sel = document.createElement("select");
+    sel.className = "sel";
+    sel.id = id;
+    options.forEach(function(opt){
+      var o = document.createElement("option");
+      o.value = opt.id;
+      o.textContent = (opt.en && opt.en !== "\u2013") ? opt.de + " \u00b7 " + opt.en : opt.de;
+      if(String(opt.id) === String(current)) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", function(){ onPick(sel.value); });
+    shell.appendChild(sel);
+    wrap.appendChild(shell);
     return wrap;
+  }
+
+  function summaryOf(s){
+    var bits = [s.dur + " s"];
+    var act = find(ACTIONS, s.action);
+    if(act.text) bits.push(act.de);
+    var tags = tagsOf(s);
+    if(tags) bits.push(tags);
+    return bits.join("  \u00b7  ");
+  }
+
+  function refreshCard(s, card){
+    var tags = tagsOf(s);
+    card.querySelector(".tags").textContent = tags ? BT + tags + BT : "ohne Kamera-Tags";
+    card.querySelector(".flag").hidden = !riskOf(s);
+    var sum = card.querySelector(".summary");
+    sum.textContent = summaryOf(s);
+    if(riskOf(s)){
+      var risk = document.createElement("span");
+      risk.className = "risk";
+      risk.textContent = "  \u26a0";
+      sum.appendChild(risk);
+    }
+    var why = card.querySelector(".why-hint");
+    if(why) why.textContent = find(SHOTS, s.shot).why || "";
   }
 
   function buildScene(s, index){
     var card = document.createElement("section");
-    card.className = "scene";
+    card.className = "scene" + (s.collapsed ? " is-collapsed" : "");
 
     var head = document.createElement("div");
     head.className = "scene-head";
-    var slate = document.createElement("div");
-    slate.className = "slate";
-    slate.textContent = "SZ " + (index < 9 ? "0" : "") + (index+1);
-    head.appendChild(slate);
+
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "slate";
+    toggle.title = "Szene ein- oder ausklappen";
+    toggle.setAttribute("aria-expanded", s.collapsed ? "false" : "true");
+    var caret = document.createElement("span");
+    caret.className = "caret";
+    caret.textContent = s.collapsed ? "\u25b8" : "\u25be";
+    var num = document.createElement("span");
+    num.textContent = "SZ " + (index < 9 ? "0" : "") + (index+1);
+    toggle.appendChild(caret);
+    toggle.appendChild(num);
+    toggle.addEventListener("click", function(){
+      s.collapsed = !s.collapsed;
+      card.classList.toggle("is-collapsed", s.collapsed);
+      caret.textContent = s.collapsed ? "\u25b8" : "\u25be";
+      toggle.setAttribute("aria-expanded", s.collapsed ? "false" : "true");
+      syncToggleAll();
+      save();
+    });
+    head.appendChild(toggle);
 
     var titleLabel = document.createElement("label");
     titleLabel.className = "sr";
@@ -918,11 +1046,15 @@
 
     var actions = document.createElement("div");
     actions.className = "scene-actions";
-    actions.appendChild(iconBtn("↑", "Szene nach oben", index === 0, function(){ move(index,-1); }));
-    actions.appendChild(iconBtn("↓", "Szene nach unten", index === state.scenes.length-1, function(){ move(index,1); }));
-    actions.appendChild(iconBtn("⧉", "Szene duplizieren", false, function(){ duplicate(index); }));
-    actions.appendChild(iconBtn("✕", "Szene löschen", state.scenes.length === 1, function(){ remove(index); }));
+    actions.appendChild(iconBtn("\u2191", "Szene nach oben", index === 0, function(){ move(index,-1); }));
+    actions.appendChild(iconBtn("\u2193", "Szene nach unten", index === state.scenes.length-1, function(){ move(index,1); }));
+    actions.appendChild(iconBtn("\u29c9", "Szene duplizieren", false, function(){ duplicate(index); }));
+    actions.appendChild(iconBtn("\u2715", "Szene l\u00f6schen", state.scenes.length === 1, function(){ remove(index); }));
     head.appendChild(actions);
+
+    var summary = document.createElement("p");
+    summary.className = "summary";
+    head.appendChild(summary);
     card.appendChild(head);
 
     var body = document.createElement("div");
@@ -933,7 +1065,7 @@
     descLabel.textContent = "Beschreibung von Szene " + (index+1);
     var desc = document.createElement("textarea");
     desc.id = "desc-" + s.id;
-    desc.placeholder = "Was die Kamera zusätzlich tut oder zeigt – die Kamera-Tags hängt der Baukasten selbst an.";
+    desc.placeholder = "Was die Kamera zus\u00e4tzlich tut oder zeigt \u2013 die Kamera-Tags h\u00e4ngt der Baukasten selbst an.";
     desc.value = s.desc;
     desc.addEventListener("input", function(){ s.desc = desc.value; render(); save(); });
     body.appendChild(descLabel);
@@ -943,88 +1075,61 @@
     var cols = document.createElement("div");
     cols.className = "cols";
 
-    cols.appendChild(column("Länge", function(stack){
-      var row = document.createElement("div");
-      row.className = "chips-inline";
-      DURATIONS.forEach(function(d){
-        var chip = document.createElement("label");
-        chip.className = "chip";
-        var input = document.createElement("input");
-        input.type = "radio";
-        input.name = "dur-" + s.id;
-        input.id = "dur-" + d + "-" + s.id;
-        input.checked = Number(s.dur) === d;
-        input.addEventListener("change", function(){ if(input.checked){ s.dur = d; renderScenes(); render(); save(); } });
-        var box = document.createElement("span");
-        box.className = "box";
-        var de = document.createElement("span");
-        de.className = "de";
-        de.textContent = d + " s";
-        box.appendChild(de);
-        chip.appendChild(input);
-        chip.appendChild(box);
-        row.appendChild(chip);
-      });
-      stack.appendChild(row);
+    /* L\u00e4nge als freies Feld: Seedance nimmt 4 bis 30 Sekunden */
+    var durWrap = document.createElement("div");
+    durWrap.className = "fld";
+    var durLab = document.createElement("label");
+    durLab.setAttribute("for", "dur-" + s.id);
+    durLab.textContent = "L\u00e4nge in Sekunden";
+    var dur = document.createElement("input");
+    dur.type = "number";
+    dur.className = "inp";
+    dur.id = "dur-" + s.id;
+    dur.min = 4; dur.max = 30; dur.step = 1;
+    dur.value = s.dur;
+    dur.addEventListener("input", function(){
+      s.dur = Math.max(4, Math.min(30, Number(dur.value) || 4));
+      refreshCard(s, card); render(); save();
+    });
+    var durHint = document.createElement("p");
+    durHint.className = "why-hint";
+    durHint.textContent = "4 bis 30 Sekunden";
+    durWrap.appendChild(durLab);
+    durWrap.appendChild(dur);
+    durWrap.appendChild(durHint);
+    cols.appendChild(durWrap);
 
-      var freeLabel = document.createElement("label");
-      freeLabel.className = "sr";
-      freeLabel.setAttribute("for", "durfree-" + s.id);
-      freeLabel.textContent = "Eigene Länge in Sekunden";
-      var free = document.createElement("input");
-      free.type = "number";
-      free.className = "inp";
-      free.id = "durfree-" + s.id;
-      free.min = 4; free.max = 30; free.step = 1;
-      free.value = s.dur;
-      free.addEventListener("input", function(){
-        var v = Math.max(4, Math.min(30, Number(free.value) || 4));
-        s.dur = v;
-        row.querySelectorAll("input").forEach(function(i){ i.checked = Number(i.id.split("-")[1]) === v; });
-        render(); save();
-      });
-      stack.appendChild(freeLabel);
-      stack.appendChild(free);
-
-      var hint = document.createElement("span");
-      hint.className = "chip-hint eyebrow";
-      hint.style.letterSpacing = ".04em";
-      hint.style.fontSize = "10px";
-      hint.textContent = "4–30 s möglich";
-      stack.appendChild(hint);
+    cols.appendChild(selectField("Aktion", ACTIONS, s.action, function(v){
+      s.action = v; refreshCard(s, card); render(); save();
     }));
 
-    cols.appendChild(column("Aktion", function(stack){
-      chipGroup(stack, "action-" + s.id, ACTIONS, s.action, function(v){ s.action = v; renderScenes(); render(); save(); }, {showEn:true});
+    cols.appendChild(selectField("Perspektive", PERSPECTIVES, s.persp, function(v){
+      s.persp = v; refreshCard(s, card); render(); save();
     }));
 
-    cols.appendChild(column("Perspektive", function(stack){
-      chipGroup(stack, "persp-" + s.id, PERSPECTIVES, s.persp, function(v){ s.persp = v; renderScenes(); render(); save(); }, {showEn:true});
-    }));
+    var shotField = selectField("Einstellungsgr\u00f6\u00dfe", SHOTS, s.shot, function(v){
+      s.shot = v; refreshCard(s, card); render(); save();
+    });
+    var why = document.createElement("p");
+    why.className = "why-hint";
+    shotField.appendChild(why);
+    cols.appendChild(shotField);
 
-    cols.appendChild(column("Einstellungsgröße", function(stack){
-      chipGroup(stack, "shot-" + s.id, SHOTS, s.shot, function(v){ s.shot = v; renderScenes(); render(); save(); }, {showEn:true, showWhy:true});
-    }));
-
-    cols.appendChild(column("Kamerabewegung", function(stack){
-      chipGroup(stack, "move-" + s.id, MOVES, s.move, function(v){ s.move = v; renderScenes(); render(); save(); }, {showEn:true});
+    cols.appendChild(selectField("Kamerabewegung", MOVES, s.move, function(v){
+      s.move = v; refreshCard(s, card); render(); save();
     }));
 
     card.appendChild(cols);
 
-    if(riskOf(s)){
-      var flag = document.createElement("p");
-      flag.className = "flag";
-      flag.textContent = "⚠ Bewegte Kamera und schnelle Gangart zusammen – im Testlauf die fehleranfälligste Kombination. Statische Kamera oder ruhigere Gangart senkt das Risiko.";
-      card.appendChild(flag);
-    }
+    var flag = document.createElement("p");
+    flag.className = "flag";
+    flag.textContent = "\u26a0 Bewegte Kamera und schnelle Gangart zusammen \u2013 im Testlauf die fehleranf\u00e4lligste Kombination. Statische Kamera oder ruhigere Gangart senkt das Risiko.";
+    card.appendChild(flag);
 
     var foot = document.createElement("div");
     foot.className = "scene-foot";
     var tags = document.createElement("span");
     tags.className = "tags";
-    var t = tagsOf(s);
-    tags.textContent = t ? BT + t + BT : "ohne Kamera-Tags";
     foot.appendChild(tags);
 
     var copyBtn = document.createElement("button");
@@ -1035,6 +1140,7 @@
     foot.appendChild(copyBtn);
     card.appendChild(foot);
 
+    refreshCard(s, card);
     return card;
   }
 
@@ -1113,6 +1219,9 @@
   el("ref-env").value = state.refEnv;
   el("ref-env").addEventListener("input", function(e){ state.refEnv = e.target.value; render(); save(); });
 
+  el("ambient").value = state.ambient || "";
+  el("ambient").addEventListener("input", function(e){ state.ambient = e.target.value; render(); save(); });
+
   el("extra").value = state.extra;
   el("extra").addEventListener("input", function(e){ state.extra = e.target.value; render(); save(); });
 
@@ -1130,9 +1239,21 @@
     });
   });
 
+  function allCollapsed(){
+    return state.scenes.length > 0 && state.scenes.every(function(s){ return s.collapsed; });
+  }
+  function syncToggleAll(){
+    el("toggle-all").textContent = allCollapsed() ? "Alle ausklappen" : "Alle einklappen";
+  }
+  el("toggle-all").addEventListener("click", function(){
+    var collapse = !allCollapsed();
+    state.scenes.forEach(function(s){ s.collapsed = collapse; });
+    renderScenes(); syncToggleAll(); save();
+  });
+
   el("add-scene").addEventListener("click", function(){
     state.scenes.push(scene({}));
-    renderScenes(); render(); save();
+    renderScenes(); render(); syncToggleAll(); save();
     var last = scenesEl.lastElementChild;
     if(last){
       last.scrollIntoView({behavior:"smooth", block:"center"});
@@ -1144,7 +1265,7 @@
   el("load-test").addEventListener("click", function(){
     state.scenes = testRun();
     state.mode = "omni_reference"; state.res = "720p"; state.aspect = "16:9";
-    state.audio = "off"; state.bitrate = "standard";
+    state.audio = "silent"; state.bitrate = "standard";
     state.blocks = {identity:true, environment:true};
     state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig";
     buildTech(); buildBase(); syncRate(); renderScenes(); render(); save();
@@ -1165,6 +1286,7 @@
   buildBase();
   syncRate();
   renderScenes();
+  syncToggleAll();
   render();
 })();
 </script>
