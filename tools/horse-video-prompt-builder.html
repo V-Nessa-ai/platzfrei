@@ -1061,7 +1061,7 @@
       risk.textContent = "  \u26a0";
       sum.appendChild(risk);
     }
-    var why = card.querySelector(".why-hint");
+    var why = card.querySelector(".shot-hint");
     if(why) why.textContent = find(SHOTS, s.shot).why || "";
   }
 
@@ -1201,7 +1201,7 @@
       s.shot = v; refreshCard(s, card); render(); save();
     });
     var why = document.createElement("p");
-    why.className = "why-hint";
+    why.className = "why-hint shot-hint";
     shotField.appendChild(why);
     cols.appendChild(shotField);
 
