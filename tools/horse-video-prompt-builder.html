@@ -561,6 +561,27 @@
     {id:"wide",   de:"Totale",        en:"wide shot",         tag:"wide shot",        why:"Pferd komplett, eingebettet in die Landschaft."}
   ];
 
+  var FRAMING = [
+    {id:"none",     de:"ohne Angabe",     en:"–",              tag:"",                text:""},
+    {id:"full",     de:"ganzes Pferd",    en:"full body",      tag:"full body",       text:"Im Bild ist das ganze Pferd von Kopf bis Huf zu sehen."},
+    {id:"head",     de:"nur Kopf",        en:"head only",      tag:"head only",       text:"Im Bild ist ausschließlich der Kopf des Referenzpferds zu sehen."},
+    {id:"headneck", de:"Kopf und Hals",   en:"head and neck",  tag:"head and neck",   text:"Im Bild sind ausschließlich Kopf und Hals des Referenzpferds zu sehen."},
+    {id:"eye",      de:"nur Augen",       en:"eye detail",     tag:"eye detail",      text:"Im Bild ist ausschließlich das Auge des Referenzpferds zu sehen, formatfüllend."},
+    {id:"nostrils", de:"Nüstern",         en:"nostrils",       tag:"nostrils",        text:"Im Bild sind ausschließlich die Nüstern des Referenzpferds zu sehen."},
+    {id:"muzzle",   de:"Maul und Lippen", en:"muzzle",         tag:"muzzle",          text:"Im Bild sind ausschließlich Maul und Lippen des Referenzpferds zu sehen."},
+    {id:"ears",     de:"Ohren",           en:"ears",           tag:"ears",            text:"Im Bild sind ausschließlich die Ohren des Referenzpferds zu sehen."},
+    {id:"mane",     de:"Mähne",           en:"mane",           tag:"mane detail",     text:"Im Bild ist ausschließlich die Mähne des Referenzpferds zu sehen."},
+    {id:"tail",     de:"nur Schweif",     en:"tail only",      tag:"tail only",       text:"Im Bild ist ausschließlich der Schweif des Referenzpferds zu sehen."},
+    {id:"hooves",   de:"nur Hufe",        en:"hooves only",    tag:"hooves only",     text:"Im Bild sind ausschließlich die Hufe des Referenzpferds zu sehen."},
+    {id:"legs",     de:"Beine",           en:"legs",           tag:"legs",            text:"Im Bild sind ausschließlich die Beine des Referenzpferds zu sehen."},
+    {id:"frontlegs",de:"Vorderbeine",     en:"front legs",     tag:"front legs",      text:"Im Bild sind ausschließlich die Vorderbeine des Referenzpferds zu sehen."},
+    {id:"hind",     de:"Hinterhand",      en:"hindquarters",   tag:"hindquarters",    text:"Im Bild ist ausschließlich die Hinterhand des Referenzpferds zu sehen."},
+    {id:"back",     de:"Rücken und Kruppe", en:"back and croup", tag:"back and croup", text:"Im Bild sind ausschließlich Rücken und Kruppe des Referenzpferds zu sehen."},
+    {id:"chest",    de:"Brust und Schulter", en:"chest and shoulder", tag:"chest and shoulder", text:"Im Bild sind ausschließlich Brust und Schulter des Referenzpferds zu sehen."},
+    {id:"coat",     de:"Felldetail",      en:"coat detail",    tag:"coat detail",     text:"Im Bild ist ausschließlich ein Ausschnitt des Fells zu sehen, formatfüllend."},
+    {id:"custom",   de:"eigener Ausschnitt …", en:"–",         tag:"",                text:""}
+  ];
+
   var MOVES = [
     {id:"static",   de:"Statisch",     en:"static camera", tag:"static camera"},
     {id:"none",     de:"ohne Angabe",  en:"–",             tag:""},
@@ -589,6 +610,8 @@
       title:o.title || "",
       action:o.action || "none",
       actionText:o.actionText || "",
+      framing:o.framing || "none",
+      framingText:o.framingText || "",
       desc:o.desc || "",
       dur:o.dur || 5,
       persp:o.persp || "none",
@@ -667,6 +690,8 @@
         if(!s.id) s.id = uid();
         s.collapsed = !!s.collapsed;
         if(typeof s.actionText !== "string") s.actionText = "";
+        if(!s.framing) s.framing = "none";
+        if(typeof s.framingText !== "string") s.framingText = "";
       });
       return d;
     }catch(e){ return null; }
@@ -736,9 +761,11 @@
     var list = [];
     var p = find(PERSPECTIVES, s.persp).tag;
     var sh = find(SHOTS, s.shot).tag;
+    var fr = find(FRAMING, s.framing).tag;
     var mv = find(MOVES, s.move).tag;
     if(p) list.push(p);
     if(sh) list.push(sh);
+    if(fr) list.push(fr);
     if(mv) list.push(mv);
     return list.join(", ");
   }
@@ -747,6 +774,11 @@
     var parts = [];
     var act = (s.action === "custom") ? sentence(s.actionText || "") : find(ACTIONS, s.action).text;
     if(act) parts.push(act);
+
+    var frame = (s.framing === "custom")
+      ? (sentence(s.framingText || "") ? "Bildausschnitt: " + sentence(s.framingText) : "")
+      : find(FRAMING, s.framing).text;
+    if(frame) parts.push(frame);
 
     var desc = s.desc.trim();
     var tags = tagsOf(s);
@@ -1163,35 +1195,46 @@
     durWrap.appendChild(durHint);
     cols.appendChild(durWrap);
 
-    var actionField = selectField("Aktion", ACTIONS, s.action, function(v){
-      s.action = v;
-      toggleCustom();
-      refreshCard(s, card); render(); save();
-      if(v === "custom") customInput.focus();
-    });
-    var customLabel = document.createElement("label");
-    customLabel.className = "sr";
-    customLabel.setAttribute("for", "act-" + s.id);
-    customLabel.textContent = "Eigener Aktionssatz für Szene " + (index+1);
-    var customInput = document.createElement("input");
-    customInput.type = "text";
-    customInput.className = "inp";
-    customInput.id = "act-" + s.id;
-    customInput.placeholder = "z. B. Referenzpferd scharrt mit dem Vorderhuf im Sand.";
-    customInput.value = s.actionText || "";
-    customInput.addEventListener("input", function(){
-      s.actionText = customInput.value;
-      refreshCard(s, card); render(); save();
-    });
-    function toggleCustom(){
-      var off = (s.action !== "custom");
-      customLabel.hidden = off;
-      customInput.hidden = off;
+    /* Auswahlfeld, das bei "custom" ein Textfeld für eigene Angaben aufklappt */
+    function customField(key, textKey, label, options, placeholder, idPrefix){
+      var input, lab;
+      var field = selectField(label, options, s[key], function(v){
+        s[key] = v;
+        toggle();
+        refreshCard(s, card); render(); save();
+        if(v === "custom") input.focus();
+      });
+
+      lab = document.createElement("label");
+      lab.className = "sr";
+      lab.setAttribute("for", idPrefix + "-" + s.id);
+      lab.textContent = label + " für Szene " + (index+1) + " frei eintragen";
+
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "inp";
+      input.id = idPrefix + "-" + s.id;
+      input.placeholder = placeholder;
+      input.value = s[textKey] || "";
+      input.addEventListener("input", function(){
+        s[textKey] = input.value;
+        refreshCard(s, card); render(); save();
+      });
+
+      function toggle(){
+        var off = (s[key] !== "custom");
+        lab.hidden = off;
+        input.hidden = off;
+      }
+
+      field.appendChild(lab);
+      field.appendChild(input);
+      toggle();
+      return field;
     }
-    actionField.appendChild(customLabel);
-    actionField.appendChild(customInput);
-    toggleCustom();
-    cols.appendChild(actionField);
+
+    cols.appendChild(customField("action", "actionText", "Aktion", ACTIONS,
+      "z. B. Referenzpferd scharrt mit dem Vorderhuf im Sand.", "act"));
 
     cols.appendChild(selectField("Perspektive", PERSPECTIVES, s.persp, function(v){
       s.persp = v; refreshCard(s, card); render(); save();
@@ -1204,6 +1247,9 @@
     why.className = "why-hint shot-hint";
     shotField.appendChild(why);
     cols.appendChild(shotField);
+
+    cols.appendChild(customField("framing", "framingText", "Bildausschnitt", FRAMING,
+      "z. B. nur die rechte Schulter mit dem Brandzeichen.", "frm"));
 
     cols.appendChild(selectField("Kamerabewegung", MOVES, s.move, function(v){
       s.move = v; refreshCard(s, card); render(); save();
