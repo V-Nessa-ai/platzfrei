@@ -216,8 +216,16 @@
   .scene-body{padding:13px 16px 2px}
   .motif{margin-bottom:11px}
   .scene-body textarea{min-height:56px}
-  .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:14px 18px;padding:14px 16px;align-items:start}
-  @media (min-width:560px){ .cols{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:14px 16px;padding:14px 16px;align-items:start}
+  @media (min-width:640px){
+    .cols{grid-template-columns:repeat(10,minmax(0,1fr))}
+    .fld-dur{grid-column:span 2}
+    .fld-action,.fld-framing{grid-column:span 4}
+    .fld-shot,.fld-persp{grid-column:span 5}
+    .fld-move{grid-column:1 / -1}
+    /* Ohne Pferd entfallen Aktion und Ausschnitt – die Länge rückt auf */
+    .scene.env-only .fld-dur{grid-column:span 5}
+  }
   .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
   .fld > label{
     font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.12em;
@@ -1367,7 +1375,7 @@
     durWrap.className = "fld";
     var durLab = document.createElement("label");
     durLab.setAttribute("for", "dur-" + s.id);
-    durLab.textContent = "L\u00e4nge in Sekunden";
+    durLab.textContent = "L\u00e4nge (s)";
     var dur = document.createElement("input");
     dur.type = "number";
     dur.className = "inp";
@@ -1384,6 +1392,7 @@
     durWrap.appendChild(durLab);
     durWrap.appendChild(dur);
     durWrap.appendChild(durHint);
+    durWrap.classList.add("fld-dur");
     cols.appendChild(durWrap);
 
     /* Auswahlfeld, das bei "custom" ein Textfeld für eigene Angaben aufklappt */
@@ -1426,11 +1435,13 @@
 
     var actionField = customField("action", "actionText", "Aktion", ACTIONS,
       "z. B. Referenzpferd scharrt mit dem Vorderhuf im Sand.", "act");
+    actionField.classList.add("fld-action");
     cols.appendChild(actionField);
 
-    cols.appendChild(selectField("Perspektive", PERSPECTIVES, s.persp, function(v){
+    var perspField = selectField("Perspektive", PERSPECTIVES, s.persp, function(v){
       s.persp = v; refreshCard(s, card); render(); save();
-    }));
+    });
+    perspField.classList.add("fld-persp");
 
     var shotField = selectField("Einstellungsgr\u00f6\u00dfe", SHOTS, s.shot, function(v){
       s.shot = v; refreshCard(s, card); render(); save();
@@ -1438,11 +1449,16 @@
     var why = document.createElement("p");
     why.className = "why-hint shot-hint";
     shotField.appendChild(why);
-    cols.appendChild(shotField);
+    shotField.classList.add("fld-shot");
 
     var framingField = customField("framing", "framingText", "Bildausschnitt", FRAMING,
       "z. B. nur die rechte Schulter mit dem Brandzeichen.", "frm");
+    framingField.classList.add("fld-framing");
+
+    /* Reihenfolge: Länge, Aktion, Ausschnitt – dann Größe, Perspektive */
     cols.appendChild(framingField);
+    cols.appendChild(shotField);
+    cols.appendChild(perspField);
 
     var moveField = selectField("Kamerabewegung", MOVES, s.move, function(v){
       s.move = v; refreshCard(s, card); render(); save();
@@ -1457,6 +1473,7 @@
     moveLink.textContent = "Beispiele bei Higgsfield ansehen ↗";
     moveLink.hidden = true;
     moveField.appendChild(moveLink);
+    moveField.classList.add("fld-move");
     cols.appendChild(moveField);
 
     card.appendChild(cols);
@@ -1484,6 +1501,7 @@
        beschreibt allein das Textfeld, was zu sehen sein soll. */
     function applyMotif(){
       var envOnly = !!s.noHorse;
+      card.classList.toggle("env-only", envOnly);
       actionField.hidden = envOnly;
       framingField.hidden = envOnly;
       desc.placeholder = envOnly
