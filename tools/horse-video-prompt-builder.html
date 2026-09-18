@@ -654,28 +654,44 @@
     {id:"custom",   de:"eigener Ausschnitt …", en:"–",         tag:"",                text:""}
   ];
 
-  /* url zeigt auf die Higgsfield-Seite der Bewegung, sofern vorhanden –
-     dann erscheint unter dem Feld ein Link zu den Beispielvideos. */
+  /* Kamerabewegungen nach der Higgsfield-Auswahl: url zeigt auf die
+     jeweilige Seite mit den Beispielvideos. */
   var MOVES = [
-    {id:"static",   de:"Statisch",     en:"static camera", tag:"static camera",
-     why:"Kamera steht fest; im Bild bewegt sich nur das Motiv."},
-    {id:"none",     de:"ohne Angabe",  en:"–",             tag:"", why:""},
-    {id:"craneUp",  de:"Kran hoch",    en:"crane up",      tag:"crane up", moving:true,
-     why:"Kamera fährt senkrecht nach oben, der Blick öffnet sich zur Umgebung."},
-    {id:"craneDown",de:"Kran runter",  en:"crane down",    tag:"crane down", moving:true,
-     why:"Kamera senkt sich von oben auf das Motiv herab."},
-    {id:"orbit",    de:"Orbit",        en:"orbit",         tag:"orbit", moving:true,
-     why:"Kamera umkreist das Motiv in gleichbleibendem Abstand."},
-    {id:"dollyIn",  de:"Fahrt heran",  en:"dolly in",      tag:"dolly in", moving:true,
-     why:"Kamera fährt gerade auf das Motiv zu, der Ausschnitt wird enger."},
-    {id:"dollyOut", de:"Fahrt zurück", en:"dolly out",     tag:"dolly out", moving:true,
-     why:"Kamera fährt vom Motiv weg und gibt die Umgebung frei."},
-    {id:"track",    de:"Mitfahrt",     en:"tracking shot", tag:"tracking shot", moving:true,
-     why:"Kamera fährt seitlich mit dem Motiv mit, der Abstand bleibt gleich."},
-    {id:"pan",      de:"Schwenk",      en:"pan",           tag:"pan", moving:true,
-     why:"Kamera bleibt am Ort und schwenkt waagerecht über die Szene."},
-    {id:"handheld", de:"Handkamera",   en:"handheld",      tag:"handheld", moving:true,
-     why:"Leicht unruhige Führung aus der Hand, dokumentarische Anmutung."}
+    {id:"none", de:"ohne Angabe", en:"–", tag:""},
+    {id:"general", de:"General", en:"Allzweck", tag:"natural camera movement", why:"Ausgewogener Allzweck-Stil mit natürlicher Bewegung und sauberem Bildaufbau. Passt zu jeder Szene und bleibt neutral, ohne dramatische Effekte.", url:"https://higgsfield.ai/de/motion/d2389a9a-91c2-4276-bc9c-c9e35e8fb85a"},
+    {id:"static", de:"Static", en:"statisch", tag:"static camera", why:"Die Kamera steht vollkommen still und schafft eine ruhige, konzentrierte Stimmung. Ideal für Porträts und dramatische Momente.", url:"https://higgsfield.ai/de/motion/c43e6d97-a55a-45d7-b5bc-b3a55d3a6e8e"},
+    {id:"orbit360", de:"360 Orbit", en:"voller Umlauf", tag:"360 orbit", moving:true, why:"Die Kamera umrundet das Motiv einmal vollständig und erzeugt einen dynamischen, umfassenden Blick. Perfekt für Enthüllungen und visuelle Energie.", url:"https://higgsfield.ai/de/motion/d7c180bc-793c-4d29-83ba-c2d5e84e53d4"},
+    {id:"aerialPullback", de:"Aerial Pullback", en:"Rückzug aus der Luft", tag:"aerial pullback", moving:true, why:"Die Kamera zieht nach oben weg, das Motiv schrumpft gegen eine weite Welt. Filmisch, atemberaubend, groß.", url:"https://higgsfield.ai/de/motion/a0bfa1b6-2dc7-4bbe-889f-fc04c27288ba"},
+    {id:"arcLeft", de:"Arc Left", en:"Bogen nach links", tag:"arc left", moving:true, why:"Die Kamera zieht einen weichen Bogen nach links um das Motiv und bringt Bewegung, Fokus und filmische Eleganz. Gut für emotionalen Aufbau.", url:"https://higgsfield.ai/de/motion/2a5d8f86-aef3-4b34-b5ee-fb2020daa131"},
+    {id:"arcRight", de:"Arc Right", en:"Bogen nach rechts", tag:"arc right", moving:true, why:"Die Kamera zieht einen sanften Bogen nach rechts um das Motiv und erzeugt Tiefe und Fluss. Für Eleganz oder filmische Intensität.", url:"https://higgsfield.ai/de/motion/0bdbf318-f918-4f9b-829a-74cab681d806"},
+    {id:"bulletTime", de:"Bullet Time", en:"Zeitlupen-Umlauf", tag:"bullet time", moving:true, why:"Die Zeit verlangsamt sich, während die Kamera das Motiv umkreist. Betont Kraft, Stil oder einen dramatischen Höhepunkt.", url:"https://higgsfield.ai/de/motion/bb341c21-9548-4efb-8a91-b6202167b344"},
+    {id:"craneDown", de:"Crane Down", en:"Kran herab", tag:"crane down", moving:true, why:"Der Kran senkt die Kamera sanft von oben auf das Motiv herab und schafft einen dramatischen Auftritt. Für Einstiege, Übergänge oder emotionale Betonung.", url:"https://higgsfield.ai/de/motion/494db3c2-2297-4cf7-bef7-cba0cebe73ee"},
+    {id:"craneOverHead", de:"Crane Over The Head", en:"Kran über den Kopf", tag:"crane over the head", moving:true, why:"Die Kamera steigt am Kran ruhig über das Motiv hinweg und gibt die Umgebung frei. Für große Momente oder Szenenwechsel.", url:"https://higgsfield.ai/de/motion/f77584f2-7442-4128-91b5-095829b108c7"},
+    {id:"crashZoomIn", de:"Crash Zoom In", en:"harter Zoom heran", tag:"crash zoom in", moving:true, why:"Ein sehr schneller Zoom auf das Motiv erzeugt einen harten, intensiven Effekt. Perfekt, um Reaktionen zu betonen oder plötzlich Aufmerksamkeit zu bündeln.", url:"https://higgsfield.ai/de/motion/a2dddb76-03fa-429e-9905-577bffdf9d38"},
+    {id:"dollyIn", de:"Dolly In", en:"Fahrt heran", tag:"dolly in", moving:true, why:"Eine ruhige Fahrt auf das Motiv zu baut Spannung auf und zieht den Blick tiefer in die Szene.", url:"https://higgsfield.ai/de/motion/1438937c-a220-4859-93f4-f373da3f73fb"},
+    {id:"dollyLeft", de:"Dolly Left", en:"Fahrt nach links", tag:"dolly left", moving:true, why:"Die Kamera gleitet seitlich nach links am Motiv entlang und erzeugt Rhythmus und filmische Bewegung.", url:"https://higgsfield.ai/de/motion/6d7fbb57-6008-4db4-a65c-56a10fc37969"},
+    {id:"dollyOut", de:"Dolly Out", en:"Fahrt zurück", tag:"dolly out", moving:true, why:"Die Kamera fährt langsam zurück, gibt Raum frei und schafft Distanz oder einen Abschluss.", url:"https://higgsfield.ai/de/motion/a787450c-b2d8-4321-967a-8c302da05949"},
+    {id:"flyingCam", de:"Flying Cam Transition", en:"Flug-Übergang", tag:"flying cam transition", moving:true, why:"Die Kamera stürzt und steigt mit schwindelerregendem Tempo und zieht das Motiv durch einen Flug aus der Ich-Perspektive. Mitreißend und dynamisch.", url:"https://higgsfield.ai/de/motion/e43378b9-b20b-4158-a626-745bbbcacdbd"},
+    {id:"focusChange", de:"Focus Change", en:"Schärfeverlagerung", tag:"focus change", why:"Die Schärfe wandert innerhalb derselben Einstellung von einem Motiv zum anderen und lenkt den Blick. Gut für Enthüllungen und emotionale Betonung.", url:"https://higgsfield.ai/de/motion/390e084a-4a80-410b-a808-77411828c61d"},
+    {id:"fpvDrone", de:"FPV Drone", en:"FPV-Drohne", tag:"fpv drone", moving:true, why:"Schnelle, fließende Aufnahmen einer FPV-Drohne, die durch enge Räume und dynamische Bahnen fliegt. Für mitreißende, filmische Bilder.", url:"https://higgsfield.ai/de/motion/5eb82f94-2b98-4e4a-ab4b-ee6c872fb2c7"},
+    {id:"glam", de:"Glam", en:"Glamour-Umlauf", tag:"glam orbit, slow motion", moving:true, why:"Eine Hochgeschwindigkeitskamera gleitet ruhig um das Motiv und erzeugt große Zeitlupenbilder voller Glanz und Wucht.", url:"https://higgsfield.ai/de/motion/ae4a319d-a06f-4b30-8b67-55a35a22f24a"},
+    {id:"handheld", de:"Handheld", en:"Handkamera", tag:"handheld", moving:true, why:"Natürliches Kamerawackeln bringt Realismus und Energie, als wäre der Moment im Gehen eingefangen.", url:"https://higgsfield.ai/de/motion/cf529456-6478-4622-a572-052f0d8ae378"},
+    {id:"heroCam", de:"Hero Cam", en:"Heldenkamera", tag:"hero cam, fast orbit", moving:true, why:"Die Kamera umkreist das Motiv mit hohem Tempo und verleiht ihm Wucht und Dramatik. Der klassische Heldenmoment.", url:"https://higgsfield.ai/de/motion/a8c54413-c991-416a-8ac8-32c6a42caa6c"},
+    {id:"jibDown", de:"Jib down", en:"Ausleger herab", tag:"jib down", moving:true, why:"Die Kamera senkt sich zum Motiv herab. Gut für Anfänge, Enthüllungen oder den Aufbau einer Stimmung.", url:"https://higgsfield.ai/de/motion/4e2318ed-572e-4d5a-bcf9-7e70e4755a52"},
+    {id:"jibUp", de:"Jib up", en:"Ausleger hinauf", tag:"jib up", moving:true, why:"Die Kamera fährt ruhig nach oben und hebt das Motiv heraus. Für filmische Aufstiege.", url:"https://higgsfield.ai/de/motion/30a7fe68-0967-419a-b7cb-0d0bed480b09"},
+    {id:"lazySusan", de:"Lazy Susan", en:"Drehteller", tag:"lazy susan turntable", moving:true, why:"Die Kamera dreht sich gleichmäßig um ein stillstehendes Motiv, wie auf einem Drehteller. Für stilvolle Produktbilder oder dramatische Enthüllungen.", url:"https://higgsfield.ai/de/motion/025866ff-677c-4af2-92ef-52d6ec3b035e"},
+    {id:"overhead", de:"Overhead", en:"Draufsicht mitfahrend", tag:"overhead tracking", moving:true, why:"Die Kamera steht über dem Motiv und folgt seiner Bewegung. Zeigt Anordnung und Wege und wirkt stilisiert.", url:"https://higgsfield.ai/de/motion/b6395b91-a356-4bc6-9cda-fc2793b3d706"},
+    {id:"panLeft", de:"Pan Left", en:"Schwenk nach links", tag:"pan left", moving:true, why:"Die Kamera schwenkt nach links, gibt neue Details frei oder folgt einer Bewegung.", url:"https://higgsfield.ai/de/motion/6f087874-24f3-4d48-9eb9-f4349ac6a105"},
+    {id:"panRight", de:"Pan Right", en:"Schwenk nach rechts", tag:"pan right", moving:true, why:"Ein weicher Schwenk nach rechts öffnet den Raum und hält die Szene in Bewegung.", url:"https://higgsfield.ai/de/motion/ce0b3d96-be4c-4b2d-962a-340dd386d910"},
+    {id:"rapidZoomIn", de:"Rapid Zoom In", en:"schneller Zoom heran", tag:"rapid zoom in", moving:true, why:"Schneller Zoom auf das Motiv, für dramatische Wirkung oder komisches Timing.", url:"https://higgsfield.ai/de/motion/3dee792a-3fb1-40e5-8f46-3a1db42d64b1"},
+    {id:"rapidZoomOut", de:"Rapid Zoom Out", en:"schneller Zoom zurück", tag:"rapid zoom out", moving:true, why:"Schneller Rückzoom, der die Umgebung freigibt oder überrascht.", url:"https://higgsfield.ai/de/motion/222b3cfc-5e24-44ee-b7f5-94deb2d2b514"},
+    {id:"superDollyIn", de:"Super Dolly In", en:"weite Fahrt heran", tag:"super dolly in", moving:true, why:"Eine gleichmäßige Fahrt geradewegs auf das Motiv zu, für Spannung, Gefühl oder einen Schlüsselmoment.", url:"https://higgsfield.ai/de/motion/6a6fb1b9-28ea-44c8-9be4-e5d8c6ab1f3a"},
+    {id:"superDollyOut", de:"Super Dolly Out", en:"weite Fahrt zurück", tag:"super dolly out", moving:true, why:"Eine gleichmäßige Fahrt vom Motiv weg, die mehr von der Szene zeigt. Für dramatische Abgänge, Distanz oder Szenenwechsel.", url:"https://higgsfield.ai/de/motion/d66685ce-8c2b-4aeb-8d4a-195d474c7eca"},
+    {id:"tiltDown", de:"Tilt Down", en:"Neigung nach unten", tag:"tilt down", moving:true, why:"Die Kamera neigt sich nach unten und gibt frei, was darunter liegt, oder verlagert den Fokus. Für Enthüllungen und Übergänge.", url:"https://higgsfield.ai/de/motion/1958a932-8ffb-4f1a-a5cd-480858f6ae84"},
+    {id:"tiltUp", de:"Tilt up", en:"Neigung nach oben", tag:"tilt up", moving:true, why:"Die Kamera neigt sich nach oben, enthüllt etwas oder lässt das Motiv groß und bedeutend wirken.", url:"https://higgsfield.ai/de/motion/9f127dad-0db0-4e3d-a440-3cfbffca30b6"},
+    {id:"timelapse", de:"Timelapse Landscape", en:"Zeitraffer Landschaft", tag:"timelapse", why:"Wolken oder Menschenmengen ziehen im Zeitraffer vorbei. Ruhiger, filmischer Lauf der Zeit.", url:"https://higgsfield.ai/de/motion/d45f0a80-62b8-4651-bd62-0373a09b8f11"},
+    {id:"zoomIn", de:"Zoom In", en:"Zoom heran", tag:"zoom in", moving:true, why:"Die Kamera kommt allmählich näher und baut Fokus, Spannung oder emotionale Dichte auf.", url:"https://higgsfield.ai/de/motion/a3a3db5d-d3c5-4d95-b429-235ae3d1ee82"},
+    {id:"zoomOut", de:"Zoom Out", en:"Zoom zurück", tag:"zoom out", moving:true, why:"Die Kamera zieht sich allmählich zurück und zeigt mehr von der Szene. Erzeugt Distanz, Spannung oder Einsamkeit.", url:"https://higgsfield.ai/de/motion/f9e6792f-b385-4eca-87f6-f439e917a7aa"}
   ];
 
   var DURATIONS = [5,8,10,15];
@@ -700,7 +716,7 @@
       dur:o.dur || 5,
       persp:o.persp || "none",
       shot:o.shot || "none",
-      move:o.move || "static",
+      move:o.move || "general",
       collapsed:false
     };
   }
@@ -776,6 +792,9 @@
         s.collapsed = !!s.collapsed;
         if(typeof s.actionText !== "string") s.actionText = "";
         if(!s.framing) s.framing = "none";
+        /* Kennungen der früheren, kürzeren Bewegungsliste überführen */
+        var MOVED = {craneUp:"jibUp", orbit:"orbit360", track:"dollyLeft", pan:"panLeft"};
+        if(MOVED[s.move]) s.move = MOVED[s.move];
         s.noHorse = !!s.noHorse;
         if(typeof s.framingText !== "string") s.framingText = "";
       });
