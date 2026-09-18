@@ -534,8 +534,13 @@
     {id:"roll",    de:"Wälzen",          en:"rolling",           text:"Referenzpferd wälzt sich am Boden."},
     {id:"rear",    de:"Steigen",         en:"rearing",           text:"Referenzpferd steigt.", fast:true},
     {id:"jump",    de:"Sprung",          en:"jumping",           text:"Referenzpferd springt.", fast:true},
-    {id:"ears",    de:"Ohrenspiel",      en:"ears pricked",      text:"Referenzpferd spitzt aufmerksam die Ohren."}
+    {id:"ears",    de:"Ohrenspiel",      en:"ears pricked",      text:"Referenzpferd spitzt aufmerksam die Ohren."},
+    {id:"custom",  de:"eigene Aktion …",  en:"–",                 text:""}
   ];
+
+  /* Erkennt schnelle Gangarten in selbst geschriebenen Aktionen, damit die
+     Warnung zu bewegter Kamera auch dort greift. */
+  var FAST_WORDS = /galopp|trab|sprin|sprung|springt|steigt|bäumt|rennt|jagt|stürmt|prescht|buckelt/i;
 
   var PERSPECTIVES = [
     {id:"none",  de:"ohne Angabe",      en:"–",                tag:""},
@@ -583,6 +588,7 @@
       id:uid(),
       title:o.title || "",
       action:o.action || "none",
+      actionText:o.actionText || "",
       desc:o.desc || "",
       dur:o.dur || 5,
       persp:o.persp || "none",
@@ -660,6 +666,7 @@
       d.scenes.forEach(function(s){
         if(!s.id) s.id = uid();
         s.collapsed = !!s.collapsed;
+        if(typeof s.actionText !== "string") s.actionText = "";
       });
       return d;
     }catch(e){ return null; }
@@ -738,7 +745,7 @@
 
   function scenePrompt(s){
     var parts = [];
-    var act = find(ACTIONS, s.action).text;
+    var act = (s.action === "custom") ? sentence(s.actionText || "") : find(ACTIONS, s.action).text;
     if(act) parts.push(act);
 
     var desc = s.desc.trim();
@@ -757,8 +764,20 @@
     return parts.join(" ");
   }
 
+  function actionLabel(s){
+    if(s.action !== "custom") return find(ACTIONS, s.action).text ? find(ACTIONS, s.action).de : "";
+    var t = (s.actionText || "").trim();
+    if(!t) return "eigene Aktion";
+    return t.length > 42 ? t.slice(0,41) + "…" : t;
+  }
+
+  function isFast(s){
+    if(s.action === "custom") return FAST_WORDS.test(s.actionText || "");
+    return !!find(ACTIONS, s.action).fast;
+  }
+
   function riskOf(s){
-    return find(ACTIONS, s.action).fast && find(MOVES, s.move).moving;
+    return isFast(s) && find(MOVES, s.move).moving;
   }
 
   /* ===================== Ausgabe ===================== */
@@ -1023,8 +1042,8 @@
 
   function summaryOf(s){
     var bits = [s.dur + " s"];
-    var act = find(ACTIONS, s.action);
-    if(act.text) bits.push(act.de);
+    var act = actionLabel(s);
+    if(act) bits.push(act);
     var tags = tagsOf(s);
     if(tags) bits.push(tags);
     return bits.join("  \u00b7  ");
@@ -1144,9 +1163,35 @@
     durWrap.appendChild(durHint);
     cols.appendChild(durWrap);
 
-    cols.appendChild(selectField("Aktion", ACTIONS, s.action, function(v){
-      s.action = v; refreshCard(s, card); render(); save();
-    }));
+    var actionField = selectField("Aktion", ACTIONS, s.action, function(v){
+      s.action = v;
+      toggleCustom();
+      refreshCard(s, card); render(); save();
+      if(v === "custom") customInput.focus();
+    });
+    var customLabel = document.createElement("label");
+    customLabel.className = "sr";
+    customLabel.setAttribute("for", "act-" + s.id);
+    customLabel.textContent = "Eigener Aktionssatz für Szene " + (index+1);
+    var customInput = document.createElement("input");
+    customInput.type = "text";
+    customInput.className = "inp";
+    customInput.id = "act-" + s.id;
+    customInput.placeholder = "z. B. Referenzpferd scharrt mit dem Vorderhuf im Sand.";
+    customInput.value = s.actionText || "";
+    customInput.addEventListener("input", function(){
+      s.actionText = customInput.value;
+      refreshCard(s, card); render(); save();
+    });
+    function toggleCustom(){
+      var off = (s.action !== "custom");
+      customLabel.hidden = off;
+      customInput.hidden = off;
+    }
+    actionField.appendChild(customLabel);
+    actionField.appendChild(customInput);
+    toggleCustom();
+    cols.appendChild(actionField);
 
     cols.appendChild(selectField("Perspektive", PERSPECTIVES, s.persp, function(v){
       s.persp = v; refreshCard(s, card); render(); save();
