@@ -70,9 +70,18 @@
 
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
   .panel-head{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:10px 12px;
     padding:13px 16px;border-bottom:1px solid var(--line);
   }
+  button.panel-toggle{
+    display:flex;align-items:center;gap:9px;flex:1 1 auto;min-width:0;
+    background:none;border:none;padding:0;text-align:left;
+  }
+  button.panel-toggle .caret{color:var(--accent);font-size:10px}
+  button.panel-toggle:hover .eyebrow{color:var(--accent)}
+  button.panel-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+  .panel.is-collapsed > *:not(.panel-head){display:none}
+  .panel.is-collapsed .panel-head{border-bottom:none}
   .eyebrow{
     font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.14em;
     text-transform:uppercase;color:var(--muted);margin:0;
@@ -92,6 +101,16 @@
     color:var(--alert);background:var(--alert-soft);border-radius:7px;padding:7px 10px;
   }
   .fixed-val{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .ref-group{display:flex;flex-direction:column;gap:6px;width:100%}
+  .ref-group + .ref-group{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .ref-label{
+    margin:0;font-family:var(--display);font-size:10.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--accent);
+  }
+  .ref-row{display:flex;align-items:center;gap:6px}
+  .ref-row .inp{flex:1 1 auto;min-width:0}
+  .ref-add{align-self:flex-start}
+  #refs-horse,#refs-env{display:flex;flex-direction:column;gap:6px}
   .fixed-val small{color:var(--muted)}
 
   input[type="text"],input[type="number"],textarea{
@@ -138,7 +157,9 @@
     flex:1 1 100%;order:9;margin:0;padding:0 12px 4px 13px;
     font-family:var(--mono);font-size:11px;line-height:1.45;color:var(--muted);word-break:break-word;
   }
-  .scene:not(.is-collapsed) .summary{display:none}
+  .scene:not(.is-collapsed) .summary,
+  .panel:not(.is-collapsed) .summary{display:none}
+  .panel-head .summary{padding-left:19px}
   .summary .risk{color:var(--alert)}
 
   /* ---------- Hauptprompt ---------- */
@@ -262,9 +283,13 @@
   <div class="board">
     <div class="editor">
 
-      <section class="panel">
+      <section class="panel" id="panel-tech">
         <div class="panel-head">
-          <h2 class="eyebrow">Technische Einstellungen · gelten für alle Szenen</h2>
+          <button class="panel-toggle" type="button" data-panel="tech" aria-expanded="true">
+            <span class="caret">▾</span>
+            <span class="eyebrow">Technische Einstellungen · gelten für alle Szenen</span>
+          </button>
+          <p class="summary" id="summary-tech"></p>
         </div>
 
         <div class="spec">
@@ -310,13 +335,19 @@
 
         <div class="spec">
           <p class="eyebrow">Referenzbilder</p>
-          <div class="spec-val" style="flex-direction:column;align-items:stretch;gap:7px">
-            <label class="sr" for="ref-horse">media_id des Pferde-Referenzbilds</label>
-            <input class="inp" type="text" id="ref-horse" placeholder="media_id Pferd – z. B. 29eecd83-cd02-43c1-a60b-48afe9d701a4">
-            <label class="sr" for="ref-env">media_id des Umgebungs-Referenzbilds</label>
-            <input class="inp" type="text" id="ref-env" placeholder="media_id Umgebung – z. B. da0e6a49-12c2-43b6-840e-f4ef449fbba1">
+          <div class="spec-val" style="flex-direction:column;align-items:stretch;gap:0">
+            <div class="ref-group">
+              <p class="ref-label">Pferd</p>
+              <div id="refs-horse"></div>
+              <button class="btn btn-sm ref-add" type="button" data-add="horse">+ Pferdebild</button>
+            </div>
+            <div class="ref-group">
+              <p class="ref-label">Umgebung</p>
+              <div id="refs-env"></div>
+              <button class="btn btn-sm ref-add" type="button" data-add="env">+ Umgebungsbild</button>
+            </div>
           </div>
-          <p class="spec-note">Beide mit Rolle <code>image_references</code>. media_ids sind an ihren Upload gebunden – in einem neuen Chat die Bilder erneut hochladen und die neuen IDs hier eintragen. Leer lassen ist in Ordnung, dann stehen Platzhalter im Aufruf.</p>
+          <p class="spec-note">Alle mit Rolle <code>image_references</code>. media_ids sind an ihren Upload gebunden – in einem neuen Chat die Bilder erneut hochladen und die neuen IDs hier eintragen. Leere Felder erscheinen als Platzhalter im Aufruf.</p>
         </div>
 
         <div class="spec">
@@ -325,14 +356,18 @@
             <input class="inp inp-num" type="number" id="rate" min="0" step="0.1" placeholder="?">
             <span class="spec-note" style="grid-column:auto;margin:0">für <b id="rate-res">720p</b></span>
           </div>
-          <p class="spec-note">Aus deinem Preflight-Check: 6,5 Credits pro Sekunde bei 720p. Für 480p und 1080p den jeweiligen Wert eintragen – er wird pro Auflösung gemerkt.</p>
+          <p class="spec-note">Aus deinem Preflight-Check: 6,5 Credits pro Sekunde bei 720p. Für 1080p den dortigen Wert eintragen – er wird pro Auflösung gemerkt.</p>
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel" id="panel-base">
         <div class="panel-head">
-          <h2 class="eyebrow">Hauptprompt-Block · hängt an jeder Szene</h2>
+          <button class="panel-toggle" type="button" data-panel="base" aria-expanded="true">
+            <span class="caret">▾</span>
+            <span class="eyebrow">Hauptprompt-Block · hängt an jeder Szene</span>
+          </button>
           <button class="btn btn-sm" id="copy-base" type="button">Block kopieren</button>
+          <p class="summary" id="summary-base"></p>
         </div>
 
         <div class="spec">
@@ -416,11 +451,11 @@
     {id:"omni_reference", de:"omni_reference", why:"Referenzbilder"},
     {id:"t2v",            de:"t2v",            why:"nur Text"}
   ];
-  var RESOLUTIONS = [{id:"480p",de:"480p"},{id:"720p",de:"720p"},{id:"1080p",de:"1080p"}];
+  var RESOLUTIONS = [{id:"720p",de:"720p"},{id:"1080p",de:"1080p"}];
   var ASPECTS = ["16:9","9:16","1:1","4:3","3:4","21:9","auto"].map(function(a){ return {id:a, de:a}; });
   var AUDIO = [
-    {id:"silent",  de:"stumm"},
     {id:"ambient", de:"nur Geräusche, keine Musik"},
+    {id:"silent",  de:"stumm"},
     {id:"full",    de:"freie Tonspur"}
   ];
   var AMBIENT_DEFAULT = "Hufschlag auf dem Boden, Schnauben und Atem des Pferds, Wind, raschelndes Gras";
@@ -573,12 +608,12 @@
       mode:"omni_reference",
       res:"720p",
       aspect:"16:9",
-      audio:"silent",
+      audio:"ambient",
       ambient:AMBIENT_DEFAULT,
       bitrate:"standard",
-      refHorse:"",
-      refEnv:"",
-      rates:{"480p":null, "720p":6.5, "1080p":null},
+      refHorses:[""],
+      refEnvs:[""],
+      rates:{"720p":6.5, "1080p":null},
       blocks:{identity:true, environment:true},
       hoof:"bare",
       time:"mittags",
@@ -586,6 +621,7 @@
       weather:"neblig",
       extra:"",
       view:"full",
+      panels:{tech:false, base:false},
       scenes:testRun()
     };
   }
@@ -603,6 +639,14 @@
       if(!d.rates) d.rates = base.rates;
       if(d.audio === "off") d.audio = "silent";
       if(d.audio === "on") d.audio = "full";
+      if(d.res === "480p") d.res = "720p";
+      if(typeof d.refHorse === "string") d.refHorses = [d.refHorse];
+      if(typeof d.refEnv === "string") d.refEnvs = [d.refEnv];
+      delete d.refHorse; delete d.refEnv;
+      if(!Array.isArray(d.refHorses) || !d.refHorses.length) d.refHorses = [""];
+      if(!Array.isArray(d.refEnvs) || !d.refEnvs.length) d.refEnvs = [""];
+      if(d.rates) delete d.rates["480p"];
+      if(!d.panels) d.panels = {tech:false, base:false};
       d.scenes.forEach(function(s){
         if(!s.id) s.id = uid();
         s.collapsed = !!s.collapsed;
@@ -715,6 +759,21 @@
 
   function audioFlag(){ return state.audio === "silent" ? "false" : "true"; }
 
+  function refCount(){ return state.refHorses.length + state.refEnvs.length; }
+
+  function pad(label){
+    var out = "  " + label;
+    while(out.length < 19) out += " ";
+    return out;
+  }
+
+  function refLines(label, list){
+    return list.map(function(id, i){
+      var head = (i === 0) ? pad(label) : pad("");
+      return head + (id.trim() || "<media_id " + label.toLowerCase() + " " + (i+1) + " nach dem Upload eintragen>");
+    });
+  }
+
   function techBlock(){
     var lines = [];
     lines.push("Modell             seedance_2_5");
@@ -725,9 +784,9 @@
       (state.audio === "ambient" ? "  · nur Geräusche, Musik im Prompt ausgeschlossen" : ""));
     lines.push("Bitrate            " + state.bitrate);
     if(usesReferences()){
-      lines.push("Referenzbilder     2 × Rolle image_references");
-      lines.push("  Pferd            " + (state.refHorse.trim() || "<media_id nach dem Upload eintragen>"));
-      lines.push("  Umgebung         " + (state.refEnv.trim() || "<media_id nach dem Upload eintragen>"));
+      lines.push("Referenzbilder     " + refCount() + " × Rolle image_references");
+      refLines("Pferd", state.refHorses).forEach(function(l){ lines.push(l); });
+      refLines("Umgebung", state.refEnvs).forEach(function(l){ lines.push(l); });
     } else {
       lines.push("Referenzbilder     keine (Modus t2v)");
     }
@@ -777,9 +836,14 @@
              (state.audio === "ambient" ? "   ← Tonspur erwünscht, aber nur Umgebungsgeräusche: der Hauptprompt schließt Musik und Instrumente aus." : ""));
     out.push("- bitrate_mode: " + state.bitrate);
     if(usesReferences()){
-      out.push("- medias: 2 Bilder, beide mit Rolle image_references");
-      out.push("  1) Pferd:    " + (state.refHorse.trim() || "<lade ich neu hoch>"));
-      out.push("  2) Umgebung: " + (state.refEnv.trim() || "<lade ich neu hoch>"));
+      out.push("- medias: " + refCount() + " Bilder, alle mit Rolle image_references");
+      var n = 0;
+      state.refHorses.forEach(function(id){
+        n++; out.push("  " + n + ") Pferd:    " + (id.trim() || "<lade ich neu hoch>"));
+      });
+      state.refEnvs.forEach(function(id){
+        n++; out.push("  " + n + ") Umgebung: " + (id.trim() || "<lade ich neu hoch>"));
+      });
       out.push("");
       out.push("Die Referenzbilder lade ich neu hoch, wenn du danach fragst – media_ids aus früheren Chats gelten nicht mehr.");
     }
@@ -1134,6 +1198,7 @@
     el("stat-secs").textContent = totalSeconds() + " s";
     var r = rate();
     el("stat-credits").textContent = r ? Math.round(totalSeconds() * r).toLocaleString("de-DE") : "–";
+    refreshPanels();
   }
 
   /* ===================== Aktionen ===================== */
@@ -1184,10 +1249,57 @@
 
   /* ===================== Verdrahtung ===================== */
 
-  el("ref-horse").value = state.refHorse;
-  el("ref-horse").addEventListener("input", function(e){ state.refHorse = e.target.value; render(); save(); });
-  el("ref-env").value = state.refEnv;
-  el("ref-env").addEventListener("input", function(e){ state.refEnv = e.target.value; render(); save(); });
+  var REF_LISTS = {
+    horse:{key:"refHorses", host:"refs-horse", label:"Pferdebild",    sample:"29eecd83-cd02-43c1-a60b-48afe9d701a4"},
+    env:  {key:"refEnvs",   host:"refs-env",   label:"Umgebungsbild", sample:"da0e6a49-12c2-43b6-840e-f4ef449fbba1"}
+  };
+
+  function renderRefs(kind){
+    var cfg = REF_LISTS[kind];
+    var host = el(cfg.host);
+    var list = state[cfg.key];
+    host.textContent = "";
+    list.forEach(function(value, i){
+      var row = document.createElement("div");
+      row.className = "ref-row";
+
+      var lab = document.createElement("label");
+      lab.className = "sr";
+      lab.setAttribute("for", "ref-" + kind + "-" + i);
+      lab.textContent = "media_id " + cfg.label + " " + (i+1);
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.className = "inp";
+      input.id = "ref-" + kind + "-" + i;
+      input.placeholder = "media_id " + cfg.label + " " + (i+1) + (i === 0 ? " – z. B. " + cfg.sample : "");
+      input.value = value;
+      input.addEventListener("input", function(){
+        state[cfg.key][i] = input.value;
+        render(); save();
+      });
+
+      row.appendChild(lab);
+      row.appendChild(input);
+      row.appendChild(iconBtn("\u2715", cfg.label + " " + (i+1) + " entfernen", list.length === 1, function(){
+        state[cfg.key].splice(i, 1);
+        if(!state[cfg.key].length) state[cfg.key] = [""];
+        renderRefs(kind); render(); save();
+      }));
+      host.appendChild(row);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".ref-add"), function(btn){
+    btn.addEventListener("click", function(){
+      var kind = btn.getAttribute("data-add");
+      state[REF_LISTS[kind].key].push("");
+      renderRefs(kind); render(); save();
+      var rows = el(REF_LISTS[kind].host).children;
+      var last = rows[rows.length-1];
+      if(last) last.querySelector("input").focus();
+    });
+  });
 
   el("ambient").value = state.ambient || "";
   el("ambient").addEventListener("input", function(e){ state.ambient = e.target.value; render(); save(); });
@@ -1206,6 +1318,38 @@
     el("view-" + v).addEventListener("change", function(e){
       if(!e.target.checked) return;
       state.view = v; render(); save();
+    });
+  });
+
+  function panelSummary(kind){
+    if(kind === "tech"){
+      return [state.mode, state.res, state.aspect, find(AUDIO, state.audio).de].join("  \u00b7  ");
+    }
+    var bits = [];
+    if(state.blocks.identity) bits.push("Pferde-Identität");
+    if(state.blocks.environment) bits.push("Umgebung");
+    [find(HOOVES, state.hoof), find(TIMES, state.time), find(SEASONS, state.season), find(WEATHER, state.weather)]
+      .forEach(function(o){ if(o.text) bits.push(o.de); });
+    return bits.length ? bits.join("  \u00b7  ") : "keine Bausteine aktiv";
+  }
+
+  function refreshPanels(){
+    ["tech","base"].forEach(function(kind){
+      var panel = el("panel-" + kind);
+      var collapsed = !!state.panels[kind];
+      panel.classList.toggle("is-collapsed", collapsed);
+      var btn = panel.querySelector(".panel-toggle");
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      btn.querySelector(".caret").textContent = collapsed ? "\u25b8" : "\u25be";
+      el("summary-" + kind).textContent = panelSummary(kind);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".panel-toggle"), function(btn){
+    btn.addEventListener("click", function(){
+      var kind = btn.getAttribute("data-panel");
+      state.panels[kind] = !state.panels[kind];
+      refreshPanels(); save();
     });
   });
 
@@ -1235,7 +1379,7 @@
   el("load-test").addEventListener("click", function(){
     state.scenes = testRun();
     state.mode = "omni_reference"; state.res = "720p"; state.aspect = "16:9";
-    state.audio = "silent"; state.bitrate = "standard";
+    state.bitrate = "standard";
     state.blocks = {identity:true, environment:true};
     state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig";
     buildTech(); buildBase(); syncRate(); renderScenes(); render(); save();
@@ -1254,6 +1398,8 @@
 
   buildTech();
   buildBase();
+  renderRefs("horse");
+  renderRefs("env");
   syncRate();
   renderScenes();
   syncToggleAll();
