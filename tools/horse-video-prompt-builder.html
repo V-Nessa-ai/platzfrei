@@ -299,8 +299,7 @@
 
         <div class="spec">
           <p class="eyebrow">Modus</p>
-          <div class="spec-val chips-inline" id="mode-chips"></div>
-          <p class="spec-note" id="mode-note"></p>
+          <div class="spec-val"><span class="fixed-val">omni_reference <small>· Referenzbilder als verbindliche Vorlage</small></span></div>
         </div>
 
         <div class="spec">
@@ -381,6 +380,14 @@
         </div>
 
         <div class="spec">
+          <p class="eyebrow">Besonderheiten</p>
+          <div class="spec-val" style="align-items:stretch">
+            <label class="sr" for="detail">Besonderheiten am Pferd</label>
+            <textarea id="detail" placeholder="Worauf beim Pferd besonders zu achten ist – z. B. geflochtene Mähne, ausrasiertes Zeichen an der Kruppe, Narbe am linken Vorderbein."></textarea>
+          </div>
+        </div>
+
+        <div class="spec">
           <p class="eyebrow">Tageszeit</p>
           <div class="spec-val chips-inline" id="time-chips"></div>
         </div>
@@ -399,7 +406,7 @@
           <p class="eyebrow">Zusatz</p>
           <div class="spec-val" style="align-items:stretch">
             <label class="sr" for="extra">Eigener Zusatz zum Hauptprompt</label>
-            <textarea id="extra" placeholder="Eigene Ergänzung, die in jeder Szene mitläuft – z. B. Halfter, Jahreszahl, Bildlook."></textarea>
+            <textarea id="extra" placeholder="Eigene Ergänzung, die in jeder Szene mitläuft – z. B. Bildlook, Filmkorn, Objektivwirkung."></textarea>
           </div>
         </div>
 
@@ -447,10 +454,6 @@
      und Aufruf bauen sich daraus von selbst.
   ====================================================================== */
 
-  var MODES = [
-    {id:"omni_reference", de:"omni_reference", why:"Referenzbilder"},
-    {id:"t2v",            de:"t2v",            why:"nur Text"}
-  ];
   var RESOLUTIONS = [{id:"720p",de:"720p"},{id:"1080p",de:"1080p"}];
   var ASPECTS = ["16:9","9:16","1:1","4:3","3:4","21:9","auto"].map(function(a){ return {id:a, de:a}; });
   var AUDIO = [
@@ -463,6 +466,7 @@
 
   var BLOCKS = [
     {id:"identity", de:"Pferde-Identität", text:"Exakt das Pferd aus den hochgeladenen Referenzbildern — identische Fellfarbe, identische Abzeichen (Blesse, Socken, Flecken) und identische Zeichnung/Wirbel wie in der Referenz, keine Abweichung in Fellmuster, Kopfform oder Statur.", needsRef:true},
+    {id:"gear", de:"ohne Ausrüstung", text:"Das Pferd trägt keinerlei Ausrüstung: kein Halfter, kein Zaumzeug, keine Trense, kein Gebiss, keine Zügel, kein Sattel, keine Satteldecke, keine Bandagen und kein Strick. Das Pferd ist vollkommen frei und unausgerüstet. " + BT + "no halter, no bridle, no bit, no reins, no saddle, no saddle pad, no tack of any kind" + BT, needsRef:false},
     {id:"environment", de:"Umgebungs-Identität", text:"Die Umgebung folgt exakt dem bereitgestellten Referenzbild für diese Szenerie — gleiche Landschaft, gleiche Vegetation, gleicher Bildaufbau und gleiche Lichtstimmung wie im Referenzbild, keine frei erfundene oder abweichende Umgebung.", needsRef:true}
   ];
 
@@ -614,8 +618,9 @@
       refHorses:[""],
       refEnvs:[""],
       rates:{"720p":6.5, "1080p":null},
-      blocks:{identity:true, environment:true},
+      blocks:{identity:true, gear:true, environment:true},
       hoof:"bare",
+      detail:"",
       time:"mittags",
       season:"herbst",
       weather:"neblig",
@@ -647,6 +652,11 @@
       if(!Array.isArray(d.refEnvs) || !d.refEnvs.length) d.refEnvs = [""];
       if(d.rates) delete d.rates["480p"];
       if(!d.panels) d.panels = {tech:false, base:false};
+      d.mode = "omni_reference";
+      if(!d.blocks) d.blocks = {};
+      ["identity","gear","environment"].forEach(function(k){
+        if(typeof d.blocks[k] === "undefined") d.blocks[k] = true;
+      });
       d.scenes.forEach(function(s){
         if(!s.id) s.id = uid();
         s.collapsed = !!s.collapsed;
@@ -667,34 +677,44 @@
     for(var i=0;i<list.length;i++){ if(list[i].id === id) return list[i]; }
     return list[0];
   }
-  function usesReferences(){ return state.mode === "omni_reference"; }
+  function usesReferences(){ return true; }
 
   /* ===================== Prompttexte ===================== */
 
+  function blockText(id){
+    for(var i=0;i<BLOCKS.length;i++){ if(BLOCKS[i].id === id) return BLOCKS[i].text; }
+    return "";
+  }
+
+  function sentence(text){
+    var t = text.trim();
+    if(t && !/[.!?]$/.test(t)) t += ".";
+    return t;
+  }
+
   function basePrompt(){
     var parts = [];
-    BLOCKS.forEach(function(b){ if(state.blocks[b.id]) parts.push(b.text); });
+
+    /* Reihenfolge: erst das Pferd, dann seine Umgebung, dann der Ton */
+    if(state.blocks.identity) parts.push(blockText("identity"));
+    if((state.detail || "").trim()) parts.push("Besonders zu beachten am Pferd: " + sentence(state.detail));
 
     var hoof = find(HOOVES, state.hoof).text;
-    if(hoof){
-      /* Hufe gehören direkt hinter die Identität des Pferds */
-      var at = state.blocks.identity ? 1 : 0;
-      parts.splice(at, 0, hoof);
-    }
+    if(hoof) parts.push(hoof);
+    if(state.blocks.gear) parts.push(blockText("gear"));
+    if(state.blocks.environment) parts.push(blockText("environment"));
 
     var t = find(TIMES, state.time).text;
-    var s = find(SEASONS, state.season).text;
+    var se = find(SEASONS, state.season).text;
     var w = find(WEATHER, state.weather).text;
     var env = [];
     if(t) env.push("Tageszeit: " + t + ".");
-    if(s) env.push("Jahreszeit: " + s + ".");
+    if(se) env.push("Jahreszeit: " + se + ".");
     if(w) env.push("Wetter: " + w + ".");
     if(env.length){
-      if(state.blocks.environment){
-        env.push("Genau wie angegeben in der Referenzumgebung, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter als vorgegeben.");
-      } else {
-        env.push("Genau wie angegeben, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter.");
-      }
+      env.push(state.blocks.environment
+        ? "Genau wie angegeben in der Referenzumgebung, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter als vorgegeben."
+        : "Genau wie angegeben, keine Abweichung — kein anderes Licht, keine andere Jahreszeit, kein anderes Wetter.");
       parts.push(env.join(" "));
     }
 
@@ -783,13 +803,9 @@
     lines.push("Ton                generate_audio: " + audioFlag() +
       (state.audio === "ambient" ? "  · nur Geräusche, Musik im Prompt ausgeschlossen" : ""));
     lines.push("Bitrate            " + state.bitrate);
-    if(usesReferences()){
-      lines.push("Referenzbilder     " + refCount() + " × Rolle image_references");
-      refLines("Pferd", state.refHorses).forEach(function(l){ lines.push(l); });
-      refLines("Umgebung", state.refEnvs).forEach(function(l){ lines.push(l); });
-    } else {
-      lines.push("Referenzbilder     keine (Modus t2v)");
-    }
+    lines.push("Referenzbilder     " + refCount() + " × Rolle image_references");
+    refLines("Pferd", state.refHorses).forEach(function(l){ lines.push(l); });
+    refLines("Umgebung", state.refEnvs).forEach(function(l){ lines.push(l); });
     var credits = creditText();
     lines.push("Umfang             " + state.scenes.length + " Szenen · " + totalSeconds() + " s" + (credits ? " · " + credits : ""));
     return lines.join("\n");
@@ -914,15 +930,10 @@
   }
 
   function buildTech(){
-    chipGroup(el("mode-chips"), "mode", MODES, state.mode, function(v){ state.mode = v; buildTech(); render(); save(); });
     chipGroup(el("res-chips"), "res", RESOLUTIONS, state.res, function(v){ state.res = v; syncRate(); render(); save(); });
     chipGroup(el("ar-chips"), "ar", ASPECTS, state.aspect, function(v){ state.aspect = v; render(); save(); });
     chipGroup(el("audio-chips"), "audio", AUDIO, state.audio, function(v){ state.audio = v; buildTech(); render(); save(); });
     chipGroup(el("bitrate-chips"), "bitrate", BITRATES, state.bitrate, function(v){ state.bitrate = v; render(); save(); });
-
-    el("mode-note").textContent = usesReferences()
-      ? "omni_reference nimmt die Referenzbilder als verbindliche Vorlage für Pferd und Umgebung."
-      : "t2v arbeitet ohne Referenzbilder – die Bausteine zur Pferde- und Umgebungs-Identität laufen dann ins Leere.";
 
     var audioNote = el("audio-note");
     el("ambient-row").hidden = (state.audio !== "ambient");
@@ -1304,6 +1315,9 @@
   el("ambient").value = state.ambient || "";
   el("ambient").addEventListener("input", function(e){ state.ambient = e.target.value; render(); save(); });
 
+  el("detail").value = state.detail || "";
+  el("detail").addEventListener("input", function(e){ state.detail = e.target.value; render(); save(); });
+
   el("extra").value = state.extra;
   el("extra").addEventListener("input", function(e){ state.extra = e.target.value; render(); save(); });
 
@@ -1323,11 +1337,13 @@
 
   function panelSummary(kind){
     if(kind === "tech"){
-      return [state.mode, state.res, state.aspect, find(AUDIO, state.audio).de].join("  \u00b7  ");
+      return [state.res, state.aspect, find(AUDIO, state.audio).de].join("  \u00b7  ");
     }
     var bits = [];
     if(state.blocks.identity) bits.push("Pferde-Identität");
+    if(state.blocks.gear) bits.push("ohne Ausrüstung");
     if(state.blocks.environment) bits.push("Umgebung");
+    if((state.detail || "").trim()) bits.push("Besonderheit");
     [find(HOOVES, state.hoof), find(TIMES, state.time), find(SEASONS, state.season), find(WEATHER, state.weather)]
       .forEach(function(o){ if(o.text) bits.push(o.de); });
     return bits.length ? bits.join("  \u00b7  ") : "keine Bausteine aktiv";
@@ -1380,7 +1396,7 @@
     state.scenes = testRun();
     state.mode = "omni_reference"; state.res = "720p"; state.aspect = "16:9";
     state.bitrate = "standard";
-    state.blocks = {identity:true, environment:true};
+    state.blocks = {identity:true, gear:true, environment:true};
     state.hoof = "bare"; state.time = "mittags"; state.season = "herbst"; state.weather = "neblig";
     buildTech(); buildBase(); syncRate(); renderScenes(); render(); save();
     toast("Testlauf geladen: 10 Szenen, 80 Sekunden");
