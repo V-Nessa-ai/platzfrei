@@ -203,6 +203,7 @@
   .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
   .scene-body{padding:13px 16px 2px}
+  .motif{margin-bottom:11px}
   .scene-body textarea{min-height:56px}
   .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:14px 18px;padding:14px 16px;align-items:start}
   @media (min-width:560px){ .cols{grid-template-columns:repeat(2,minmax(0,1fr))} }
@@ -526,7 +527,12 @@
     {id:"strong", de:"kräftiger Wind", text:"Kräftiger, böiger Wind weht durch die ganze Szene: Mähne und Schweif wehen stark, das Gras legt sich in Böen, Staub und Blätter werden verweht. " + BT + "strong wind, gusts" + BT}
   ];
 
-  function ambientPrompt(){
+  function ambientPrompt(noHorse){
+    if(noHorse){
+      return "Die Tonspur enthält ausschließlich die natürlichen Geräusche dieser Szene selbst. " +
+        "Keine Musik, keine Instrumente, kein Soundtrack, keine Melodie, kein Gesang, keine Stimmen, kein Kommentar. " +
+        BT + "natural ambient sound only, diegetic sound, no music, no instruments, no soundtrack, no score, no singing, no voice-over" + BT;
+    }
     var sounds = (state.ambient || "").trim() || AMBIENT_DEFAULT;
     if(!/[.!?]$/.test(sounds)) sounds += ".";
     return "Die Tonspur enthält ausschließlich natürliche Geräusche der Szene selbst: " + sounds +
@@ -633,6 +639,7 @@
       actionText:o.actionText || "",
       framing:o.framing || "none",
       framingText:o.framingText || "",
+      noHorse:!!o.noHorse,
       desc:o.desc || "",
       dur:o.dur || 5,
       persp:o.persp || "none",
@@ -724,6 +731,7 @@
         s.collapsed = !!s.collapsed;
         if(typeof s.actionText !== "string") s.actionText = "";
         if(!s.framing) s.framing = "none";
+        s.noHorse = !!s.noHorse;
         if(typeof s.framingText !== "string") s.framingText = "";
       });
       return d;
@@ -757,16 +765,20 @@
     return t;
   }
 
-  function basePrompt(){
+  function basePrompt(noHorse){
     var parts = [];
 
-    /* Reihenfolge: erst das Pferd, dann seine Umgebung, dann der Ton */
-    if(state.blocks.identity) parts.push(blockText("identity"));
-    if((state.detail || "").trim()) parts.push("Besonders zu beachten am Pferd: " + sentence(state.detail));
+    /* Reihenfolge: erst das Pferd, dann seine Umgebung, dann der Ton.
+       Szenen ohne Pferd lassen den ganzen Pferdeteil weg, damit der
+       Hauptprompt nicht doch wieder eines ins Bild holt. */
+    if(!noHorse){
+      if(state.blocks.identity) parts.push(blockText("identity"));
+      if((state.detail || "").trim()) parts.push("Besonders zu beachten am Pferd: " + sentence(state.detail));
 
-    var hoof = find(HOOVES, state.hoof).text;
-    if(hoof) parts.push(hoof);
-    if(state.blocks.gear) parts.push(blockText("gear"));
+      var hoof = find(HOOVES, state.hoof).text;
+      if(hoof) parts.push(hoof);
+      if(state.blocks.gear) parts.push(blockText("gear"));
+    }
     if(state.blocks.environment) parts.push(blockText("environment"));
 
     var t = find(TIMES, state.time).text;
@@ -787,7 +799,7 @@
 
     if(state.extra.trim()) parts.push(state.extra.trim());
     if(state.audio === "silent") parts.push(SILENT);
-    else if(state.audio === "ambient") parts.push(ambientPrompt());
+    else if(state.audio === "ambient") parts.push(ambientPrompt(noHorse));
 
     return parts.join(" ");
   }
@@ -796,7 +808,7 @@
     var list = [];
     var p = find(PERSPECTIVES, s.persp).tag;
     var sh = find(SHOTS, s.shot).tag;
-    var fr = find(FRAMING, s.framing).tag;
+    var fr = s.noHorse ? "" : find(FRAMING, s.framing).tag;
     var mv = find(MOVES, s.move).tag;
     if(p) list.push(p);
     if(sh) list.push(sh);
@@ -807,13 +819,18 @@
 
   function scenePrompt(s){
     var parts = [];
-    var act = (s.action === "custom") ? sentence(s.actionText || "") : find(ACTIONS, s.action).text;
-    if(act) parts.push(act);
+    if(s.noHorse){
+      parts.push("In dieser Szene ist kein Pferd zu sehen, ausschließlich die Umgebung selbst. " +
+        BT + "no horse, no animals, environment only" + BT);
+    } else {
+      var act = (s.action === "custom") ? sentence(s.actionText || "") : find(ACTIONS, s.action).text;
+      if(act) parts.push(act);
 
-    var frame = (s.framing === "custom")
-      ? (sentence(s.framingText || "") ? "Bildausschnitt: " + sentence(s.framingText) : "")
-      : find(FRAMING, s.framing).text;
-    if(frame) parts.push(frame);
+      var frame = (s.framing === "custom")
+        ? (sentence(s.framingText || "") ? "Bildausschnitt: " + sentence(s.framingText) : "")
+        : find(FRAMING, s.framing).text;
+      if(frame) parts.push(frame);
+    }
 
     var desc = s.desc.trim();
     var tags = tagsOf(s);
@@ -826,7 +843,7 @@
       parts.push(BT + tags + BT + ".");
     }
 
-    var base = basePrompt();
+    var base = basePrompt(s.noHorse);
     if(base) parts.push(base);
     return parts.join(" ");
   }
@@ -844,7 +861,7 @@
   }
 
   function riskOf(s){
-    return isFast(s) && find(MOVES, s.move).moving;
+    return !s.noHorse && isFast(s) && find(MOVES, s.move).moving;
   }
 
   /* ===================== Ausgabe ===================== */
@@ -1114,7 +1131,8 @@
 
   function summaryOf(s){
     var bits = [s.dur + " s"];
-    var act = actionLabel(s);
+    if(s.noHorse) bits.push("ohne Pferd");
+    var act = s.noHorse ? "" : actionLabel(s);
     if(act) bits.push(act);
     var tags = tagsOf(s);
     if(tags) bits.push(tags);
@@ -1134,7 +1152,7 @@
       sum.appendChild(risk);
     }
     var why = card.querySelector(".shot-hint");
-    if(why) why.textContent = find(SHOTS, s.shot).why || "";
+    if(why) why.textContent = s.noHorse ? "" : (find(SHOTS, s.shot).why || "");
   }
 
   function buildScene(s, index){
@@ -1195,13 +1213,25 @@
 
     var body = document.createElement("div");
     body.className = "scene-body";
+
+    var motif = document.createElement("div");
+    motif.className = "chips-inline motif";
+    chipGroup(motif, "motif-" + s.id,
+      [{id:"horse", de:"mit Pferd"}, {id:"env", de:"nur Umgebung, kein Pferd"}],
+      s.noHorse ? "env" : "horse",
+      function(v){
+        s.noHorse = (v === "env");
+        applyMotif();
+        refreshCard(s, card); render(); save();
+      });
+    body.appendChild(motif);
+
     var descLabel = document.createElement("label");
     descLabel.className = "sr";
     descLabel.setAttribute("for", "desc-" + s.id);
     descLabel.textContent = "Beschreibung von Szene " + (index+1);
     var desc = document.createElement("textarea");
     desc.id = "desc-" + s.id;
-    desc.placeholder = "Was die Kamera zus\u00e4tzlich tut oder zeigt \u2013 die Kamera-Tags h\u00e4ngt der Baukasten selbst an.";
     desc.value = s.desc;
     desc.addEventListener("input", function(){ s.desc = desc.value; render(); save(); });
     body.appendChild(descLabel);
@@ -1273,8 +1303,9 @@
       return field;
     }
 
-    cols.appendChild(customField("action", "actionText", "Aktion", ACTIONS,
-      "z. B. Referenzpferd scharrt mit dem Vorderhuf im Sand.", "act"));
+    var actionField = customField("action", "actionText", "Aktion", ACTIONS,
+      "z. B. Referenzpferd scharrt mit dem Vorderhuf im Sand.", "act");
+    cols.appendChild(actionField);
 
     cols.appendChild(selectField("Perspektive", PERSPECTIVES, s.persp, function(v){
       s.persp = v; refreshCard(s, card); render(); save();
@@ -1288,8 +1319,9 @@
     shotField.appendChild(why);
     cols.appendChild(shotField);
 
-    cols.appendChild(customField("framing", "framingText", "Bildausschnitt", FRAMING,
-      "z. B. nur die rechte Schulter mit dem Brandzeichen.", "frm"));
+    var framingField = customField("framing", "framingText", "Bildausschnitt", FRAMING,
+      "z. B. nur die rechte Schulter mit dem Brandzeichen.", "frm");
+    cols.appendChild(framingField);
 
     cols.appendChild(selectField("Kamerabewegung", MOVES, s.move, function(v){
       s.move = v; refreshCard(s, card); render(); save();
@@ -1315,6 +1347,18 @@
     copyBtn.addEventListener("click", function(){ copy(scenePrompt(s), "Szenen-Prompt kopiert"); });
     foot.appendChild(copyBtn);
     card.appendChild(foot);
+
+    /* Ohne Pferd sind Aktion und Bildausschnitt gegenstandslos – dann
+       beschreibt allein das Textfeld, was zu sehen sein soll. */
+    function applyMotif(){
+      var envOnly = !!s.noHorse;
+      actionField.hidden = envOnly;
+      framingField.hidden = envOnly;
+      desc.placeholder = envOnly
+        ? "Was in dieser Szene zu sehen ist – z. B. Wellen laufen flach am Strand aus, Blätter zittern im Wind."
+        : "Was die Kamera zusätzlich tut oder zeigt – die Kamera-Tags hängt der Baukasten selbst an.";
+    }
+    applyMotif();
 
     refreshCard(s, card);
     return card;
