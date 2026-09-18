@@ -170,12 +170,11 @@
   .scene.is-collapsed .flag{display:none}
   .scene.is-collapsed .scene-head{border-bottom:none}
   .summary{
-    flex:1 1 100%;order:9;margin:0;padding:0 12px 4px 13px;
-    font-family:var(--mono);font-size:12px;line-height:1.45;color:var(--muted);word-break:break-word;
+    flex:1 1 200px;min-width:0;margin:0;
+    font-family:var(--mono);font-size:13px;line-height:1.45;color:var(--muted);word-break:break-word;
   }
-  .scene:not(.is-collapsed) .summary,
   .panel:not(.is-collapsed) .summary{display:none}
-  .panel-head .summary{padding-left:19px}
+  .panel-head .summary{flex:1 1 100%;order:9;padding-left:20px;font-size:12px}
   .summary .risk{color:var(--alert)}
 
   /* ---------- Hauptprompt ---------- */
@@ -199,14 +198,13 @@
     border-bottom:1px solid var(--line);background:var(--scene-head);
   }
   button.slate{
-    align-self:stretch;display:flex;align-items:center;gap:8px;padding:10px 15px;border:none;
-    background:var(--slate);color:var(--ink);font-family:var(--mono);font-size:16px;
+    align-self:stretch;display:flex;align-items:center;gap:10px;padding:10px 26px;border:none;
+    background:var(--slate);color:var(--ink);font-family:var(--mono);font-size:16px;letter-spacing:.1em;
     letter-spacing:.08em;white-space:nowrap;
   }
   button.slate:hover{background:var(--accent);color:var(--accent-ink)}
   button.slate:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
   button.slate .caret{font-size:12px;opacity:.8}
-  .scene-title{flex:1 1 170px;min-width:0;font-family:var(--display);font-weight:600;font-size:17.5px;letter-spacing:-.01em}
   .scene-actions{display:flex;gap:3px;flex:0 0 auto}
   button{font:inherit;color:inherit;cursor:pointer}
   .icon-btn{
@@ -730,7 +728,6 @@
   function scene(o){
     return {
       id:uid(),
-      title:o.title || "",
       action:o.action || "none",
       actionText:o.actionText || "",
       framing:o.framing || "none",
@@ -1021,10 +1018,7 @@
   }
 
   function sceneHeading(s, i){
-    var bits = [String(s.dur) + " s"];
-    var tags = tagsOf(s);
-    if(tags) bits.push(tags);
-    return "SZENE " + (i+1) + " · " + (s.title.trim() || "Ohne Titel") + " · " + bits.join(" · ") + (riskOf(s) ? "  ⚠" : "");
+    return "SZENE " + (i+1) + " · " + summaryOf(s) + (riskOf(s) ? "  ⚠" : "");
   }
 
   function viewFull(){
@@ -1094,7 +1088,7 @@
       : "Szenen: noch keine angelegt.");
     state.scenes.forEach(function(s, i){
       out.push("");
-      out.push((i+1) + ") duration: " + s.dur + " s — " + (s.title.trim() || "Ohne Titel"));
+      out.push((i+1) + ") duration: " + s.dur + " s — " + summaryOf(s, true));
       out.push(scenePrompt(s));
     });
     return out.join("\n");
@@ -1266,8 +1260,8 @@
     return wrap;
   }
 
-  function summaryOf(s){
-    var bits = [s.dur + " s"];
+  function summaryOf(s, withoutDuration){
+    var bits = withoutDuration ? [] : [s.dur + " s"];
     if(s.noHorse) bits.push("ohne Pferd");
     var act = s.noHorse ? "" : actionLabel(s);
     if(act) bits.push(act);
@@ -1330,19 +1324,9 @@
     });
     head.appendChild(toggle);
 
-    var titleLabel = document.createElement("label");
-    titleLabel.className = "sr";
-    titleLabel.setAttribute("for", "title-" + s.id);
-    titleLabel.textContent = "Titel von Szene " + (index+1);
-    var title = document.createElement("input");
-    title.type = "text";
-    title.id = "title-" + s.id;
-    title.className = "scene-title";
-    title.placeholder = "Szenentitel";
-    title.value = s.title;
-    title.addEventListener("input", function(){ s.title = title.value; render(); save(); });
-    head.appendChild(titleLabel);
-    head.appendChild(title);
+    var summary = document.createElement("p");
+    summary.className = "summary";
+    head.appendChild(summary);
 
     var actions = document.createElement("div");
     actions.className = "scene-actions";
@@ -1351,10 +1335,6 @@
     actions.appendChild(iconBtn("\u29c9", "Szene duplizieren", false, function(){ duplicate(index); }));
     actions.appendChild(iconBtn("\u2715", "Szene l\u00f6schen", false, function(){ remove(index); }));
     head.appendChild(actions);
-
-    var summary = document.createElement("p");
-    summary.className = "summary";
-    head.appendChild(summary);
     card.appendChild(head);
 
     var body = document.createElement("div");
@@ -1734,7 +1714,7 @@
     var last = scenesEl.lastElementChild;
     if(last){
       last.scrollIntoView({behavior:"smooth", block:"center"});
-      var field = last.querySelector(".scene-title");
+      var field = last.querySelector("textarea");
       if(field) field.focus();
     }
   });
