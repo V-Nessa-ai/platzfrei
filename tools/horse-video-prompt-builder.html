@@ -1847,24 +1847,47 @@
     return "pferdeszenen-kunden-" + d.getFullYear() + "-" + two(d.getMonth()+1) + "-" + two(d.getDate()) + ".json";
   }
 
+  /* Als eigenständige Datei geht der gewohnte Weg über einen Blob; in der
+     Artifact-Ansicht läuft ein Download nur über die Plattform. */
+  function saveFile(filename, text, done){
+    function viaBlob(){
+      try{
+        var blob = new Blob([text], {type:"application/json"});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+        toast(done);
+      }catch(e){
+        copy(text, "Speichern nicht möglich – JSON in die Zwischenablage kopiert");
+      }
+    }
+
+    if(window.claude && typeof window.claude.use === "function"){
+      window.claude.use("downloads").then(function(api){
+        if(!api){ viaBlob(); return; }
+        api.save({filename:filename, data:text}).then(
+          function(){ toast(done); },
+          function(err){
+            if(err && err.code === "declined"){ toast("Speichern abgebrochen"); return; }
+            copy(text, "Speichern nicht möglich – JSON in die Zwischenablage kopiert");
+          }
+        );
+      }, viaBlob);
+    } else {
+      viaBlob();
+    }
+  }
+
   el("client-export").addEventListener("click", function(){
     var names = Object.keys(clients());
     if(!names.length){ toast("Noch kein Kunde gespeichert"); return; }
-    var text = JSON.stringify(exportData(), null, 2);
-    try{
-      var blob = new Blob([text], {type:"application/json"});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      a.href = url;
-      a.download = exportName();
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-      toast(names.length + " Kunden gesichert – kommt nichts an, nimm „Als Text kopieren“");
-    }catch(e){
-      copy(text, "Download nicht möglich – JSON in die Zwischenablage kopiert");
-    }
+    saveFile(exportName(), JSON.stringify(exportData(), null, 2),
+      names.length + (names.length === 1 ? " Kunde gesichert" : " Kunden gesichert"));
   });
 
   el("client-copy").addEventListener("click", function(){
