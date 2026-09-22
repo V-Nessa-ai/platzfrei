@@ -525,11 +525,9 @@
           <p class="eyebrow">Sicherung</p>
           <div class="spec-val client-row">
             <button class="btn btn-sm" id="client-export" type="button">Als JSON-Datei sichern</button>
-            <button class="btn btn-sm" id="client-copy" type="button">Als Text kopieren</button>
             <button class="btn btn-sm" id="client-import" type="button">Datei einlesen</button>
             <input type="file" id="client-file" accept="application/json,.json" hidden>
           </div>
-          <p class="spec-note">Sichert alle Kunden in einer Datei – für ein Backup oder den Umzug auf einen anderen Rechner. Chrome und Edge fragen dabei nach Ordner und Dateinamen; andere Browser legen die Datei in den Download-Ordner. Kommt gar nichts an, nimm „Als Text kopieren“.</p>
         </div>
       </section>
 
@@ -1919,12 +1917,6 @@
     if(!names.length){ toast("Noch kein Kunde gespeichert"); return; }
     saveFile(exportName(), JSON.stringify(exportData(), null, 2),
       names.length + (names.length === 1 ? " Kunde gesichert" : " Kunden gesichert"));
-  });
-
-  el("client-copy").addEventListener("click", function(){
-    var names = Object.keys(clients());
-    if(!names.length){ toast("Noch kein Kunde gespeichert"); return; }
-    copy(JSON.stringify(exportData(), null, 2), names.length + " Kunden als JSON kopiert");
   });
 
   el("client-import").addEventListener("click", function(){ el("client-file").click(); });
