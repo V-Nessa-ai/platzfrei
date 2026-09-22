@@ -94,14 +94,14 @@
   .panel.is-collapsed > *:not(.panel-head){display:none}
   .panel.is-collapsed .panel-head{border-bottom:none}
   .eyebrow{
-    font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--muted);margin:0;
+    font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin:0;line-height:1.25;
   }
   .panel-head .eyebrow{color:var(--ink)}
 
   /* ---------- Spezifikationszeilen ---------- */
   .spec{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:12px 16px;border-bottom:1px solid var(--line)}
-  @media (min-width:560px){ .spec{grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:baseline} }
+  @media (min-width:560px){ .spec{grid-template-columns:210px minmax(0,1fr);gap:14px;align-items:baseline} }
   .spec:last-child{border-bottom:none}
   .spec > .eyebrow{padding-top:3px}
   .spec-val{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
