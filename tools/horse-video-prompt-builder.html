@@ -121,6 +121,11 @@
   .ref-row{display:flex;align-items:center;gap:6px}
   .ref-row .inp{flex:1 1 auto;min-width:0}
   .ref-add{align-self:flex-start}
+  .client-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .client-row .sel-wrap{flex:1 1 240px;min-width:0}
+  .client-row input.inp{flex:1 1 240px}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn:disabled:hover{border-color:var(--line-strong);color:var(--muted)}
   #refs-horse,#refs-env{display:flex;flex-direction:column;gap:6px}
   .fixed-val small{color:var(--muted)}
 
@@ -332,6 +337,30 @@
 
   <div class="board">
     <div class="editor">
+
+      <section class="panel" id="panel-client">
+        <div class="panel-head">
+          <h2 class="eyebrow">Kunde</h2>
+          <span class="spec-note" style="margin:0">Sichert alles: Technik, Hauptprompt und Szenen</span>
+        </div>
+        <div class="spec">
+          <p class="eyebrow">Gespeichert</p>
+          <div class="spec-val client-row">
+            <label class="sr" for="client-list">Gespeicherte Kunden</label>
+            <div class="sel-wrap"><select class="sel" id="client-list"></select></div>
+            <button class="btn btn-sm" id="client-load" type="button">Laden</button>
+            <button class="btn btn-sm btn-quiet" id="client-delete" type="button">Löschen</button>
+          </div>
+        </div>
+        <div class="spec">
+          <p class="eyebrow">Name</p>
+          <div class="spec-val client-row">
+            <label class="sr" for="client-name">Name des Kunden</label>
+            <input class="inp" type="text" id="client-name" placeholder="z. B. Gestüt Sonnenhof">
+            <button class="btn btn-sm btn-primary" id="client-save" type="button">Speichern</button>
+          </div>
+        </div>
+      </section>
 
       <section class="panel" id="panel-tech">
         <div class="panel-head">
@@ -777,6 +806,13 @@
       if(!raw) return null;
       var d = JSON.parse(raw);
       if(!d || !Array.isArray(d.scenes)) return null;
+      return normalize(d);
+    }catch(e){ return null; }
+  }
+
+  /* Bringt einen gespeicherten Stand auf die heutige Struktur – für den
+     eigenen Speicher wie für geladene Kunden. */
+  function normalize(d){
       var base = fresh();
       Object.keys(base).forEach(function(k){ if(typeof d[k] === "undefined") d[k] = base[k]; });
       if(!d.rates) d.rates = base.rates;
@@ -820,7 +856,6 @@
         if(typeof s.framingText !== "string") s.framingText = "";
       });
       return d;
-    }catch(e){ return null; }
   }
 
   var saveTimer = null;
@@ -1725,6 +1760,120 @@
     toast("Szenen geleert");
   });
 
+  /* ===================== Kunden ===================== */
+
+  var CLIENTS_KEY = "pferdeszenen-kunden-v1";
+  var pendingDelete = null;
+
+  function clients(){
+    try{ return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function storeClients(map){
+    try{ localStorage.setItem(CLIENTS_KEY, JSON.stringify(map)); }
+    catch(e){ toast("Speichern im Browser nicht möglich"); }
+  }
+
+  function renderClients(selected){
+    var map = clients();
+    var names = Object.keys(map).sort(function(a, b){ return a.localeCompare(b, "de"); });
+    var sel = el("client-list");
+    sel.textContent = "";
+
+    var first = document.createElement("option");
+    first.value = "";
+    first.textContent = names.length ? "– Kunde wählen –" : "– noch keiner gespeichert –";
+    sel.appendChild(first);
+
+    names.forEach(function(name){
+      var o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      if(name === selected) o.selected = true;
+      sel.appendChild(o);
+    });
+
+    el("client-load").disabled = !names.length;
+    el("client-delete").disabled = !names.length;
+  }
+
+  function resetDelete(){
+    pendingDelete = null;
+    el("client-delete").textContent = "Löschen";
+  }
+
+  /* Baut die Oberfläche komplett aus dem Zustand neu auf */
+  function refreshAll(){
+    el("ambient").value = state.ambient || "";
+    el("detail").value = state.detail || "";
+    el("extra").value = state.extra || "";
+    el("price").value = (state.creditsPerEuro > 0) ? Math.round(state.creditsPerEuro * 100) / 100 : "";
+    el("translate").checked = !!state.translate;
+    var view = el("view-" + state.view);
+    if(view) view.checked = true;
+    buildTech();
+    buildBase();
+    renderRefs("horse");
+    renderRefs("env");
+    syncRate();
+    renderScenes();
+    syncToggleAll();
+    render();
+  }
+
+  el("client-list").addEventListener("change", function(e){
+    if(e.target.value) el("client-name").value = e.target.value;
+    resetDelete();
+  });
+
+  el("client-save").addEventListener("click", function(){
+    var name = el("client-name").value.trim();
+    if(!name){
+      toast("Bitte einen Namen eintragen");
+      el("client-name").focus();
+      return;
+    }
+    var map = clients();
+    var known = !!map[name];
+    map[name] = JSON.parse(JSON.stringify(state));
+    storeClients(map);
+    renderClients(name);
+    resetDelete();
+    toast(known ? name + " überschrieben" : name + " gespeichert");
+  });
+
+  el("client-load").addEventListener("click", function(){
+    var name = el("client-list").value;
+    if(!name){ toast("Erst einen Kunden auswählen"); return; }
+    var map = clients();
+    if(!map[name]){ renderClients(); return; }
+    state = normalize(JSON.parse(JSON.stringify(map[name])));
+    el("client-name").value = name;
+    resetDelete();
+    refreshAll();
+    save();
+    toast(name + " geladen");
+  });
+
+  /* Zweistufig statt Dialog: der Knopf fragt selbst nach */
+  el("client-delete").addEventListener("click", function(){
+    var name = el("client-list").value;
+    if(!name){ toast("Erst einen Kunden auswählen"); return; }
+    var btn = el("client-delete");
+    if(pendingDelete !== name){
+      pendingDelete = name;
+      btn.textContent = "Wirklich löschen?";
+      setTimeout(function(){ if(pendingDelete === name) resetDelete(); }, 5000);
+      return;
+    }
+    var map = clients();
+    delete map[name];
+    storeClients(map);
+    resetDelete();
+    renderClients();
+    toast(name + " gelöscht");
+  });
+
   el("copy-base").addEventListener("click", function(){ copy(basePrompt(), "Hauptprompt-Block kopiert"); });
   el("copy-all").addEventListener("click", function(){ copy(currentView(), "Ansicht kopiert"); });
 
@@ -1740,14 +1889,8 @@
     if(logo.complete && logo.naturalWidth === 0) fallback();
   })();
 
-  buildTech();
-  buildBase();
-  renderRefs("horse");
-  renderRefs("env");
-  syncRate();
-  renderScenes();
-  syncToggleAll();
-  render();
+  renderClients();
+  refreshAll();
 })();
 </script>
 </html>
