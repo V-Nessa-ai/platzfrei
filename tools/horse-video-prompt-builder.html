@@ -369,7 +369,7 @@
             <button class="btn btn-sm" id="client-import" type="button">Datei einlesen</button>
             <input type="file" id="client-file" accept="application/json,.json" hidden>
           </div>
-          <p class="spec-note">Sichert alle Kunden in einer Datei – für ein Backup oder den Umzug auf einen anderen Rechner. Lädt der Browser keine Datei herunter, nimm „Als Text kopieren“ und sichere den Text selbst.</p>
+          <p class="spec-note">Sichert alle Kunden in einer Datei – für ein Backup oder den Umzug auf einen anderen Rechner. Chrome und Edge fragen dabei nach Ordner und Dateinamen; andere Browser legen die Datei in den Download-Ordner. Kommt gar nichts an, nimm „Als Text kopieren“.</p>
         </div>
       </section>
 
@@ -1847,8 +1847,9 @@
     return "pferdeszenen-kunden-" + d.getFullYear() + "-" + two(d.getMonth()+1) + "-" + two(d.getDate()) + ".json";
   }
 
-  /* Als eigenständige Datei geht der gewohnte Weg über einen Blob; in der
-     Artifact-Ansicht läuft ein Download nur über die Plattform. */
+  /* Drei Wege, je nachdem was die Umgebung zulässt: ein echter
+     Speichern-unter-Dialog mit Ordnerwahl, der Download über die
+     Plattform (Artifact-Ansicht) oder der gewohnte Blob-Download. */
   function saveFile(filename, text, done){
     function viaBlob(){
       try{
@@ -1867,20 +1868,43 @@
       }
     }
 
-    if(window.claude && typeof window.claude.use === "function"){
-      window.claude.use("downloads").then(function(api){
-        if(!api){ viaBlob(); return; }
-        api.save({filename:filename, data:text}).then(
-          function(){ toast(done); },
-          function(err){
-            if(err && err.code === "declined"){ toast("Speichern abgebrochen"); return; }
-            copy(text, "Speichern nicht möglich – JSON in die Zwischenablage kopiert");
-          }
-        );
-      }, viaBlob);
-    } else {
-      viaBlob();
+    function viaPlatform(){
+      if(window.claude && typeof window.claude.use === "function"){
+        window.claude.use("downloads").then(function(api){
+          if(!api){ viaBlob(); return; }
+          api.save({filename:filename, data:text}).then(
+            function(){ toast(done); },
+            function(err){
+              if(err && err.code === "declined"){ toast("Speichern abgebrochen"); return; }
+              copy(text, "Speichern nicht möglich – JSON in die Zwischenablage kopiert");
+            }
+          );
+        }, viaBlob);
+      } else {
+        viaBlob();
+      }
     }
+
+    /* Ordner und Dateiname selbst wählen – Chrome und Edge können das */
+    if(typeof window.showSaveFilePicker === "function"){
+      var opts = {
+        suggestedName:filename,
+        types:[{description:"JSON-Datei", accept:{"application/json":[".json"]}}]
+      };
+      window.showSaveFilePicker(opts).then(function(handle){
+        return handle.createWritable().then(function(writer){
+          return writer.write(text).then(function(){ return writer.close(); });
+        });
+      }).then(function(){
+        toast(done);
+      }, function(err){
+        if(err && err.name === "AbortError"){ return; }
+        viaPlatform();
+      });
+      return;
+    }
+
+    viaPlatform();
   }
 
   el("client-export").addEventListener("click", function(){
