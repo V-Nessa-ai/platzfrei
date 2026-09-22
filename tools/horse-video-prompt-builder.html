@@ -74,6 +74,11 @@
   .board{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;margin-top:22px;align-items:start}
   @media (min-width:1080px){ .board{grid-template-columns:minmax(0,1fr) 420px;gap:26px} }
   .editor{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .side{display:flex;flex-direction:column;gap:22px;min-width:0}
+  @media (min-width:1080px){ .side{align-self:stretch} }
+  /* In der schmalen Spalte stehen die Beschriftungen über ihren Feldern */
+  #panel-client .spec{grid-template-columns:minmax(0,1fr);gap:8px}
+  #panel-client .client-row .sel-wrap{flex:1 1 100%}
 
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
   .panel-head{
@@ -338,41 +343,6 @@
   <div class="board">
     <div class="editor">
 
-      <section class="panel" id="panel-client">
-        <div class="panel-head">
-          <h2 class="eyebrow">Kunde</h2>
-          <span class="spec-note" style="margin:0">Sichert alles: Technik, Hauptprompt und Szenen</span>
-        </div>
-        <div class="spec">
-          <p class="eyebrow">Gespeichert</p>
-          <div class="spec-val client-row">
-            <label class="sr" for="client-list">Gespeicherte Kunden</label>
-            <div class="sel-wrap"><select class="sel" id="client-list"></select></div>
-            <button class="btn btn-sm" id="client-load" type="button">Laden</button>
-            <button class="btn btn-sm btn-quiet" id="client-delete" type="button">Löschen</button>
-          </div>
-        </div>
-        <div class="spec">
-          <p class="eyebrow">Name</p>
-          <div class="spec-val client-row">
-            <label class="sr" for="client-name">Name des Kunden</label>
-            <input class="inp" type="text" id="client-name" placeholder="z. B. Gestüt Sonnenhof">
-            <button class="btn btn-sm btn-primary" id="client-save" type="button">Speichern</button>
-          </div>
-        </div>
-
-        <div class="spec">
-          <p class="eyebrow">Sicherung</p>
-          <div class="spec-val client-row">
-            <button class="btn btn-sm" id="client-export" type="button">Als JSON-Datei sichern</button>
-            <button class="btn btn-sm" id="client-copy" type="button">Als Text kopieren</button>
-            <button class="btn btn-sm" id="client-import" type="button">Datei einlesen</button>
-            <input type="file" id="client-file" accept="application/json,.json" hidden>
-          </div>
-          <p class="spec-note">Sichert alle Kunden in einer Datei – für ein Backup oder den Umzug auf einen anderen Rechner. Chrome und Edge fragen dabei nach Ordner und Dateinamen; andere Browser legen die Datei in den Download-Ordner. Kommt gar nichts an, nimm „Als Text kopieren“.</p>
-        </div>
-      </section>
-
       <section class="panel" id="panel-tech">
         <div class="panel-head">
           <button class="panel-toggle" type="button" data-panel="tech" aria-expanded="true">
@@ -527,6 +497,42 @@
       </div>
     </div>
 
+    <div class="side">
+      <section class="panel" id="panel-client">
+        <div class="panel-head">
+          <h2 class="eyebrow">Kunde</h2>
+          <span class="spec-note" style="margin:0">Sichert alles: Technik, Hauptprompt und Szenen</span>
+        </div>
+        <div class="spec">
+          <p class="eyebrow">Gespeichert</p>
+          <div class="spec-val client-row">
+            <label class="sr" for="client-list">Gespeicherte Kunden</label>
+            <div class="sel-wrap"><select class="sel" id="client-list"></select></div>
+            <button class="btn btn-sm" id="client-load" type="button">Laden</button>
+            <button class="btn btn-sm btn-quiet" id="client-delete" type="button">Löschen</button>
+          </div>
+        </div>
+        <div class="spec">
+          <p class="eyebrow">Name</p>
+          <div class="spec-val client-row">
+            <label class="sr" for="client-name">Name des Kunden</label>
+            <input class="inp" type="text" id="client-name" placeholder="z. B. Gestüt Sonnenhof">
+            <button class="btn btn-sm btn-primary" id="client-save" type="button">Speichern</button>
+          </div>
+        </div>
+
+        <div class="spec">
+          <p class="eyebrow">Sicherung</p>
+          <div class="spec-val client-row">
+            <button class="btn btn-sm" id="client-export" type="button">Als JSON-Datei sichern</button>
+            <button class="btn btn-sm" id="client-copy" type="button">Als Text kopieren</button>
+            <button class="btn btn-sm" id="client-import" type="button">Datei einlesen</button>
+            <input type="file" id="client-file" accept="application/json,.json" hidden>
+          </div>
+          <p class="spec-note">Sichert alle Kunden in einer Datei – für ein Backup oder den Umzug auf einen anderen Rechner. Chrome und Edge fragen dabei nach Ordner und Dateinamen; andere Browser legen die Datei in den Download-Ordner. Kommt gar nichts an, nimm „Als Text kopieren“.</p>
+        </div>
+      </section>
+
     <section class="panel output">
       <div class="panel-head">
         <h2 class="eyebrow">Ausgabe</h2>
@@ -546,6 +552,7 @@
         <button class="btn btn-primary" id="copy-all" type="button">Ansicht kopieren</button>
       </div>
     </section>
+    </div>
   </div>
 </div>
 
