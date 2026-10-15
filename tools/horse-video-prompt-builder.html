@@ -293,6 +293,8 @@
   }
   .actions .btn-add{font-size:17px;font-weight:700;padding:19px 14px;letter-spacing:.01em}
   #add-scene:hover{background:#FFFFFF;border-color:#FFFFFF;color:#111111;filter:none}
+  #shuffle{background:#E8821E;border-color:#E8821E;color:#1B1105;font-weight:700}
+  #shuffle:hover{background:#FFFFFF;border-color:#FFFFFF;color:#B35E07}
   /* Knöpfe, die Arbeit vernichten, tragen Rot */
   .btn-quiet{background:#3B0000;border-color:#5E0000;color:#FFFFFF;font-weight:700}
   .btn-quiet:hover{background:#BA0000;border-color:#BA0000;color:#FFFFFF}
@@ -387,7 +389,7 @@
             <label class="sr" for="ambient">Erlaubte Geräusche</label>
             <input class="inp" type="text" id="ambient" placeholder="Hufschlag, Schnauben, Wind, raschelndes Gras">
           </div>
-          <p class="spec-note">Diese Geräusche erlaubt der Hauptprompt ausdrücklich – Musik, Instrumente, Gesang und Sprache schließt er ebenso ausdrücklich aus.</p>
+          <p class="spec-note">Diese Geräusche erlaubt der Hauptprompt ausdrücklich. Wiehern, Musik, Instrumente, Gesang und Sprache schließt er ebenso ausdrücklich aus – Wiehern auch dann, wenn es hier stünde.</p>
         </div>
 
         <div class="spec">
@@ -541,9 +543,9 @@
         <span class="tags" id="charcount"></span>
       </div>
       <div class="tabs" role="radiogroup" aria-label="Ausgabeformat">
+        <label class="tab"><input type="radio" name="view" id="view-order" value="order"><span>Chat-Auftrag</span></label>
         <label class="tab"><input type="radio" name="view" id="view-full" value="full"><span>Briefing</span></label>
         <label class="tab"><input type="radio" name="view" id="view-scenes" value="scenes"><span>Nur Prompts</span></label>
-        <label class="tab"><input type="radio" name="view" id="view-order" value="order"><span>Chat-Auftrag</span></label>
       </div>
       <label class="switch" for="translate" id="translate-row">
         <input type="checkbox" id="translate">
@@ -631,6 +633,8 @@
     {id:"strong", de:"kräftiger Wind", text:"Kräftiger, böiger Wind weht durch die ganze Szene: Mähne und Schweif wehen stark, das Gras legt sich in Böen, Staub und Blätter werden verweht. " + BT + "strong wind, gusts" + BT}
   ];
 
+  var NO_WHINNY = /wiehern|gewieher|whinn|neigh/i;
+
   function ambientPrompt(noHorse){
     if(noHorse){
       return "Die Tonspur enthält ausschließlich die natürlichen Geräusche dieser Szene selbst. " +
@@ -638,10 +642,16 @@
         BT + "natural ambient sound only, diegetic sound, no music, no instruments, no soundtrack, no score, no singing, no voice-over" + BT;
     }
     var sounds = (state.ambient || "").trim() || AMBIENT_DEFAULT;
+    /* Wiehern geht nie als erwünschtes Geräusch in den Prompt – es wird
+       weiter unten ausdrücklich ausgeschlossen. */
+    sounds = sounds.split(/\s*,\s*/).filter(function(part){
+      return part && !NO_WHINNY.test(part);
+    }).join(", ");
+    if(!sounds) sounds = AMBIENT_DEFAULT;
     if(!/[.!?]$/.test(sounds)) sounds += ".";
     return "Die Tonspur enthält ausschließlich natürliche Geräusche der Szene selbst: " + sounds +
-      " Keine Musik, keine Instrumente, kein Soundtrack, keine Melodie, kein Gesang, keine Stimmen, kein Kommentar. " +
-      BT + "natural ambient sound only, diegetic sound, no music, no instruments, no soundtrack, no score, no singing, no voice-over" + BT;
+      " Kein Wiehern, keine Musik, keine Instrumente, kein Soundtrack, keine Melodie, kein Gesang, keine Stimmen, kein Kommentar. " +
+      BT + "natural ambient sound only, diegetic sound, no whinnying, no neighing, no music, no instruments, no soundtrack, no score, no singing, no voice-over" + BT;
   }
 
   var SILENT = "Kein Hintergrundton, keine Musik, keine Instrumente, kein gesungener oder gespielter Ton jeglicher Art. Das Video entsteht vollständig stumm, ohne jegliche Audiospur. " + BT + "no music, no instruments, no soundtrack, no score, no singing, silent, no audio track" + BT;
@@ -810,7 +820,8 @@
       weather:"neblig",
       wind:"none",
       extra:"",
-      view:"full",
+      view:"order",
+      orderFirst:true,
       translate:true,
       panels:{tech:false, base:false},
       emptyStart:true,
@@ -850,6 +861,8 @@
       if(!Array.isArray(d.refEnvs) || !d.refEnvs.length) d.refEnvs = [""];
       if(d.rates) delete d.rates["480p"];
       if(!d.panels) d.panels = {tech:false, base:false};
+      /* Einmalig: der Chat-Auftrag ist jetzt die erste Ansicht */
+      if(!d.orderFirst){ d.view = "order"; d.orderFirst = true; }
 
       /* Einmalig: Wer noch die vorgeladenen Szenen älterer Fassungen
          gespeichert hat, startet ab hier mit leerer Liste. Alle übrigen
