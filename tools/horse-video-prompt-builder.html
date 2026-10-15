@@ -283,8 +283,8 @@
   .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
   .btn-primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
   .btn-sm{padding:6px 11px;font-size:13px}
-  .actions{display:grid;grid-template-columns:7fr 2fr 1fr;gap:10px;align-items:stretch}
-  .actions.no-scenes{grid-template-columns:7fr 3fr}
+  .actions{display:grid;grid-template-columns:5fr 2fr 2fr 1fr;gap:10px;align-items:stretch}
+  .actions.no-scenes{grid-template-columns:5fr 2fr 1fr}
   @media (max-width:640px){
     .actions,.actions.no-scenes{grid-template-columns:1fr}
   }
@@ -495,6 +495,7 @@
 
       <div class="actions" id="actions">
         <button class="btn btn-primary btn-add" id="add-scene" type="button">+ Szene hinzufügen</button>
+        <button class="btn" id="shuffle" type="button">Szene würfeln</button>
         <button class="btn" id="toggle-all" type="button">Alle einklappen</button>
         <button class="btn btn-quiet" id="reset" type="button">Alles leeren</button>
       </div>
@@ -1713,6 +1714,51 @@
     });
   });
 
+  /* ===================== Szene würfeln ===================== */
+
+  function pick(list){ return list[Math.floor(Math.random() * list.length)]; }
+
+  function pickId(list, skip){
+    return pick(list.filter(function(o){ return skip.indexOf(o.id) === -1; })).id;
+  }
+
+  /* Zu jeder Einstellungsgröße die Ausschnitte, die dazu passen –
+     eine Makroaufnahme des ganzen Pferds gibt es nicht. */
+  var FRAMING_BY_SHOT = {
+    macro:  ["eye","nostrils","coat","muzzle"],
+    close:  ["head","headneck","muzzle","ears","mane","eye","hooves"],
+    medium: ["headneck","chest","back","hind","full"],
+    wide:   ["full","legs"]
+  };
+
+  function randomScene(){
+    var shot = pickId(SHOTS, ["none"]);
+    var action = pickId(ACTIONS, ["none","custom"]);
+    var fast = !!find(ACTIONS, action).fast;
+
+    /* Große Fahrten passen nicht zu einem Detailausschnitt */
+    var BIG = ["aerialPullback","craneDown","craneOverHead","flyingCam",
+               "fpvDrone","jibDown","jibUp","overhead","timelapse"];
+    var tight = (shot === "macro" || shot === "close");
+
+    /* Schnelle Gangart und bewegte Kamera sind die fehleranfälligste
+       Kombination – beim Würfeln bleibt sie außen vor. */
+    var moves = MOVES.filter(function(m){
+      if(m.id === "none") return false;
+      if(tight && BIG.indexOf(m.id) !== -1) return false;
+      return fast ? !m.moving : true;
+    });
+
+    return scene({
+      dur:pick(DURATIONS),
+      action:action,
+      persp:pickId(PERSPECTIVES, ["none"]),
+      shot:shot,
+      framing:pick(FRAMING_BY_SHOT[shot] || ["full"]),
+      move:pick(moves).id
+    });
+  }
+
   function panelSummary(kind){
     if(kind === "tech"){
       return [state.res, state.aspect, find(AUDIO, state.audio).de].join("  \u00b7  ");
@@ -1759,6 +1805,14 @@
     var collapse = !allCollapsed();
     state.scenes.forEach(function(s){ s.collapsed = collapse; });
     renderScenes(); syncToggleAll(); save();
+  });
+
+  el("shuffle").addEventListener("click", function(){
+    state.scenes.push(randomScene());
+    renderScenes(); render(); syncToggleAll(); save();
+    var last = scenesEl.lastElementChild;
+    if(last) last.scrollIntoView({behavior:"smooth", block:"center"});
+    toast("Szene gewürfelt");
   });
 
   el("add-scene").addEventListener("click", function(){
