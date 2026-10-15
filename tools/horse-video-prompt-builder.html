@@ -230,12 +230,12 @@
   .scene-body textarea{min-height:56px}
   .cols{display:grid;grid-template-columns:minmax(0,1fr);gap:14px 16px;padding:14px 16px;align-items:start}
   @media (min-width:640px){
-    .cols{grid-template-columns:repeat(10,minmax(0,1fr))}
-    .fld-dur{grid-column:span 2}
-    .fld-action,.fld-framing{grid-column:span 4}
-    .fld-shot,.fld-persp{grid-column:span 5}
+    .cols{grid-template-columns:repeat(15,minmax(0,1fr))}
+    .fld-dur{grid-column:span 3}
+    .fld-action,.fld-framing{grid-column:span 6}
+    .fld-shot,.fld-persp,.fld-side{grid-column:span 5}
     .fld-move{grid-column:1 / -1}
-    /* Ohne Pferd entfallen Aktion und Ausschnitt – die Länge rückt auf */
+    /* Ohne Pferd entfallen Aktion, Ausschnitt und Blickrichtung */
     .scene.env-only .fld-dur{grid-column:span 5}
   }
   .fld{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -703,6 +703,17 @@
     {id:"wide",   de:"Totale",        en:"wide shot",         tag:"wide shot",        why:"Pferd komplett, eingebettet in die Landschaft."}
   ];
 
+  /* Von welcher Seite das Pferd zu sehen ist – unabhängig von der
+     Kamerahöhe, die die Perspektive beschreibt. */
+  var SIDES = [
+    {id:"none",        de:"ohne Angabe",      en:"–",                      tag:"",                           text:""},
+    {id:"front",       de:"frontal von vorn", en:"front view",             tag:"front view",                 text:"Das Referenzpferd ist frontal von vorn zu sehen."},
+    {id:"frontAngle",  de:"schräg von vorn",  en:"three-quarter front",    tag:"three-quarter front view",   text:"Das Referenzpferd ist schräg von vorn zu sehen, in Dreiviertelansicht."},
+    {id:"side",        de:"seitlich im Profil", en:"side view",            tag:"side view, profile",         text:"Das Referenzpferd ist von der Seite im vollen Profil zu sehen."},
+    {id:"rearAngle",   de:"schräg von hinten", en:"three-quarter rear",    tag:"three-quarter rear view",    text:"Das Referenzpferd ist schräg von hinten zu sehen, in Dreiviertelansicht."},
+    {id:"rear",        de:"von hinten",       en:"rear view",              tag:"rear view, from behind",     text:"Das Referenzpferd ist von hinten zu sehen."}
+  ];
+
   var FRAMING = [
     {id:"none",     de:"ohne Angabe",     en:"–",              tag:"",                text:""},
     {id:"full",     de:"ganzes Pferd",    en:"full body",      tag:"full body",       text:"Im Bild ist das ganze Pferd von Kopf bis Huf zu sehen."},
@@ -791,6 +802,7 @@
       actionText:o.actionText || "",
       framing:o.framing || "none",
       framingText:o.framingText || "",
+      side:o.side || "none",
       noHorse:!!o.noHorse,
       desc:o.desc || "",
       dur:o.dur || 5,
@@ -882,6 +894,7 @@
         s.collapsed = !!s.collapsed;
         if(typeof s.actionText !== "string") s.actionText = "";
         if(!s.framing) s.framing = "none";
+        if(!s.side) s.side = "none";
         /* Kennungen der früheren, kürzeren Bewegungsliste überführen */
         var MOVED = {craneUp:"jibUp", orbit:"orbit360", track:"dollyLeft", pan:"panLeft"};
         if(MOVED[s.move]) s.move = MOVED[s.move];
@@ -965,10 +978,12 @@
     var list = [];
     var p = find(PERSPECTIVES, s.persp).tag;
     var sh = find(SHOTS, s.shot).tag;
+    var sd = s.noHorse ? "" : find(SIDES, s.side).tag;
     var fr = s.noHorse ? "" : find(FRAMING, s.framing).tag;
     var mv = find(MOVES, s.move).tag;
     if(p) list.push(p);
     if(sh) list.push(sh);
+    if(sd) list.push(sd);
     if(fr) list.push(fr);
     if(mv) list.push(mv);
     return list.join(", ");
@@ -982,6 +997,9 @@
     } else {
       var act = (s.action === "custom") ? sentence(s.actionText || "") : find(ACTIONS, s.action).text;
       if(act) parts.push(act);
+
+      var side = find(SIDES, s.side).text;
+      if(side) parts.push(side);
 
       var frame = (s.framing === "custom")
         ? (sentence(s.framingText || "") ? "Bildausschnitt: " + sentence(s.framingText) : "")
@@ -1493,6 +1511,11 @@
     });
     perspField.classList.add("fld-persp");
 
+    var sideField = selectField("Blickrichtung", SIDES, s.side, function(v){
+      s.side = v; refreshCard(s, card); render(); save();
+    });
+    sideField.classList.add("fld-side");
+
     var shotField = selectField("Einstellungsgr\u00f6\u00dfe", SHOTS, s.shot, function(v){
       s.shot = v; refreshCard(s, card); render(); save();
     });
@@ -1509,6 +1532,7 @@
     cols.appendChild(framingField);
     cols.appendChild(shotField);
     cols.appendChild(perspField);
+    cols.appendChild(sideField);
 
     var moveField = selectField("Kamerabewegung", MOVES, s.move, function(v){
       s.move = v; refreshCard(s, card); render(); save();
@@ -1554,6 +1578,7 @@
       card.classList.toggle("env-only", envOnly);
       actionField.hidden = envOnly;
       framingField.hidden = envOnly;
+      sideField.hidden = envOnly;
       desc.placeholder = envOnly
         ? "Was in dieser Szene zu sehen ist – z. B. Wellen laufen flach am Strand aus, Blätter zittern im Wind."
         : "Was die Kamera zusätzlich tut oder zeigt – die Kamera-Tags hängt der Baukasten selbst an.";
@@ -1770,6 +1795,7 @@
       dur:pick(DURATIONS),
       action:action,
       persp:pickId(PERSPECTIVES, ["none"]),
+      side:pickId(SIDES, ["none"]),
       shot:shot,
       framing:pick(FRAMING_BY_SHOT[shot] || ["full"]),
       move:pick(moves).id
