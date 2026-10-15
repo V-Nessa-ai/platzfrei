@@ -584,6 +584,7 @@
   var BITRATES = [{id:"standard",de:"standard"},{id:"high",de:"high"}];
 
   var BLOCKS = [
+    {id:"photoreal", de:"fotorealistisch", text:"Vollständig fotorealistisch: eine echte Kameraaufnahme, kein Rendering, keine Illustration, keine künstliche Anmutung. Aufgenommen mit einer Vollformatkamera und lichtstarkem Objektiv, natürliche Schärfentiefe, feines Filmkorn, leichte Bewegungsunschärfe wie bei echter Kamera. Echtes Fell mit einzelnen Haaren, Staub, Unebenheiten und kleinen Unregelmäßigkeiten. Natürliches Licht mit weichen, physikalisch korrekten Schatten, zurückhaltende, natürliche Farben. Keine CGI-Optik, keine glatten Plastikoberflächen, keine überzogene Schärfe, kein HDR-Look, keine übersättigten Farben, kein künstliches Leuchten, keine geglättete Haut- oder Felloberfläche. " + BT + "photorealistic, live action footage, shot on full-frame camera, prime lens, natural depth of field, fine film grain, natural motion blur, realistic fur texture, natural light, soft realistic shadows, muted natural colour, no CGI, no 3D render, no illustration, no plastic look, no oversaturation, no HDR, no over-sharpening, no artificial glow" + BT, needsRef:false},
     {id:"identity", de:"Pferde-Identität", text:"Exakt das Pferd aus den hochgeladenen Referenzbildern — identische Fellfarbe, identische Abzeichen (Blesse, Socken, Flecken) und identische Zeichnung/Wirbel wie in der Referenz, keine Abweichung in Fellmuster, Kopfform oder Statur.", needsRef:true},
     {id:"gear", de:"ohne Ausrüstung", text:"Das Pferd trägt keinerlei Ausrüstung: kein Halfter, kein Zaumzeug, keine Trense, kein Gebiss, keine Zügel, kein Sattel, keine Satteldecke, keine Bandagen und kein Strick. Das Pferd ist vollkommen frei und unausgerüstet. " + BT + "no halter, no bridle, no bit, no reins, no saddle, no saddle pad, no tack of any kind" + BT, needsRef:false},
     {id:"environment", de:"Umgebungs-Identität", text:"Die Umgebung folgt exakt dem bereitgestellten Referenzbild für diese Szenerie — gleiche Landschaft, gleiche Vegetation, gleicher Bildaufbau und gleiche Lichtstimmung wie im Referenzbild, keine frei erfundene oder abweichende Umgebung.", needsRef:true}
@@ -812,7 +813,7 @@
       refEnvs:[""],
       rates:{"720p":6.5, "1080p":null},
       creditsPerEuro:null,
-      blocks:{identity:true, gear:true, environment:true},
+      blocks:{photoreal:true, identity:true, gear:true, environment:true},
       hoof:"bare",
       detail:"",
       time:"mittags",
@@ -873,7 +874,7 @@
       }
       d.mode = "omni_reference";
       if(!d.blocks) d.blocks = {};
-      ["identity","gear","environment"].forEach(function(k){
+      ["photoreal","identity","gear","environment"].forEach(function(k){
         if(typeof d.blocks[k] === "undefined") d.blocks[k] = true;
       });
       d.scenes.forEach(function(s){
@@ -920,6 +921,9 @@
 
   function basePrompt(noHorse){
     var parts = [];
+
+    /* Der Look steht vorn – er gilt für das ganze Bild, mit und ohne Pferd */
+    if(state.blocks.photoreal) parts.push(blockText("photoreal"));
 
     /* Reihenfolge: erst das Pferd, dann seine Umgebung, dann der Ton.
        Szenen ohne Pferd lassen den ganzen Pferdeteil weg, damit der
@@ -1777,6 +1781,7 @@
       return [state.res, state.aspect, find(AUDIO, state.audio).de].join("  \u00b7  ");
     }
     var bits = [];
+    if(state.blocks.photoreal) bits.push("fotorealistisch");
     if(state.blocks.identity) bits.push("Pferde-Identität");
     if(state.blocks.gear) bits.push("ohne Ausrüstung");
     if(state.blocks.environment) bits.push("Umgebung");
